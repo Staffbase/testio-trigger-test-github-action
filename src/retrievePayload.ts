@@ -38,7 +38,7 @@ async function createPayload() {
         Util.throwErrorAndPrepareErrorMessage(JSON.stringify(error), errorFileName);
     }
 
-    const prepareTestSchemaFile = `${process.env.TESTIO_SCRIPTS_DIR}/exploratory_test_comment_prepare_schema.json`;
+    const prepareTestSchemaFile = 'resources/exploratory_test_comment_prepare_schema.json';
     const {valid, validation} = Util.validateObjectAgainstSchema(preparation, prepareTestSchemaFile);
     if (!valid) {
         if (validation.errors) {
@@ -52,7 +52,7 @@ async function createPayload() {
     const testIOPayload = Util.convertPrepareObjectToTestIOPayload(preparation, github.context.repo.repo, github.context.repo.owner, github.context.issue.number);
     console.log("Converted payload:");
     console.log(testIOPayload);
-    const payloadFile = `${process.env.TESTIO_SCRIPTS_DIR}/testio_payload.json`;
+    const payloadFile = 'resources/testio_payload.json';
     await fs.writeFile(payloadFile, JSON.stringify(testIOPayload), (err) => {
         if (err) Util.throwErrorAndPrepareErrorMessage(err.message, errorFileName);
         console.log(`The payload file ${payloadFile} has been saved successfully`);
