@@ -10,7 +10,7 @@ inputs:
   testio-slug:
     description: |-
       The slug you received from TestIO.
-      Usually it is the part inside the URL you got to access your custom are on the TestIO platform according to this pattern: https://<YOUR_SLUG>.test.io
+      Usually it is the part inside the URL you got to access your custom area on the TestIO platform according to this pattern: https://<YOUR_SLUG>.test.io
     required: true
   testio-product-id:
     description: |-
