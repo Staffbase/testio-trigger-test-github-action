@@ -1,0 +1,90 @@
+name: Trigger Test on TestIO
+
+author: Staffbase GmbH
+
+description: |-
+  Triggers a test on the crowd-testing platform TestIO from a pull request by adding and editing specific comments.
+  If you want to do that you need to be a customer from TestIO.
+
+inputs:
+  testio-slug:
+    description: |-
+      The slug you received from TestIO.
+      Usually it is the part inside the URL you got to access your custom area on the TestIO platform according to this pattern: https://<YOUR_SLUG>.test.io
+    required: true
+  testio-product-id:
+    description: |-
+      On the TestIO platform customers can specify different products.
+      This property refers to the product you want to trigger a new test for.
+    required: true
+  github-token:
+    description: |-
+      A GitHub token having granted permissions to write a comment in the repository where this action is intended to be executed.
+    required: true
+  testio-token:
+    description: |-
+      The token of a TestIO user which should be used for communicating with the TestIO API.
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: TestIO - Init global environment
+      shell: bash
+      run: |-
+        echo "TESTIO_ERROR_MSG_FILE=errorToComment.msg" >> $GITHUB_ENV
+
+    - name: TestIO - Set up Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: TestIO - Install Dependencies
+      run: npm install
+
+    - name: TestIO - Add PR comment for requesting required input
+      id: prepare
+      if: startsWith(github.event.comment.body, '@bot-testio exploratory-test create')
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        TESTIO_CREATE_COMMENT_URL: ${{ github.event.comment.html_url }}
+      run: npx ts-node ${{github.action_path}}/src/addPRcomment.ts
+
+    - name: TestIO - Retrieve input and create payload
+      id: payload
+      if: startsWith(github.event.comment.body, '@bot-testio exploratory-test submit')
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        TESTIO_SUBMIT_COMMENT_ID: ${{ github.event.comment.id }}
+        TESTIO_SUBMIT_COMMENT_URL: ${{ github.event.comment.html_url }}
+      run: npx ts-node ${{github.action_path}}/src/retrievePayload.ts
+
+    - name: TestIO - Trigger TestIO Test
+      id: trigger
+      if: ${{ steps.payload.outcome == 'success' }}
+      env:
+        TESTIO_PRODUCT_ID: ${{ inputs.testio-product-id }}
+        TESTIO_TOKEN: ${{ inputs.testio-token }}
+      run: npx ts-node ${{github.action_path}}/src/triggerTest.ts
+
+    - name: TestIO - Report Success
+      if: ${{ steps.trigger.outcome == 'success' }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        TESTIO_CREATED_TEST_ID: ${{ steps.trigger.outputs.testio-created-test-id }}
+        TESTIO_PRODUCT_ID: ${{ inputs.testio-product-id }}
+        TESTIO_SLUG: ${{ inputs.testio-slug }}
+        TESTIO_SUBMIT_COMMENT_ID: ${{ steps.payload.outputs.testio-submit-comment-id }}
+        TESTIO_CREATE_COMMENT_URL: ${{ steps.payload.outputs.testio-create-comment-url }}
+      run: npx ts-node ${{github.action_path}}/src/reportSuccess.ts
+
+    - name: TestIO - Report Failure
+      if: failure()
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        TESTIO_CREATE_COMMENT_URL: ${{ steps.payload.outputs.testio-create-comment-url }}
+      run: npx ts-node ${{github.action_path}}/src/reportFailure.ts
+
+branding:
+  icon: 'user-plus'
+  color: 'blue'
