@@ -84,3 +84,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         TESTIO_CREATE_COMMENT_URL: ${{ steps.payload.outputs.testio-create-comment-url }}
       run: npx ts-node ${{github.action_path}}/src/reportFailure.ts
+
+branding:
+  icon: 'user-plus'
+  color: 'blue'
