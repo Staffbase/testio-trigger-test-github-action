@@ -34,6 +34,9 @@ runs:
       run: |-
         echo "TESTIO_ERROR_MSG_FILE=errorToComment.msg" >> $GITHUB_ENV
 
+    - name: TestIO - Checkout
+      uses: actions/checkout@v3
+
     - name: TestIO - Set up Node
       uses: actions/setup-node@v3
       with:
