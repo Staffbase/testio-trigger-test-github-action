@@ -34,9 +34,6 @@ runs:
       run: |-
         echo "TESTIO_ERROR_MSG_FILE=errorToComment.msg" >> $GITHUB_ENV
 
-    - name: TestIO - Checkout
-      uses: actions/checkout@v3
-
     - name: TestIO - Set up Node
       uses: actions/setup-node@v3
       with:
@@ -44,13 +41,9 @@ runs:
 
     - name: TestIO - Install Dependencies
       shell: bash
-      run: npm install
-
-    - name: TestIO - Log output             // TODO remove
-      shell: bash
       run: |-
-        ls -lisa
-        ls -lisa ${{github.action_path}}
+        cd ${{github.action_path}}
+        npm install
 
     - name: TestIO - Add PR comment for requesting required input
       id: prepare
