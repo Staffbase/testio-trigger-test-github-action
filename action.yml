@@ -40,6 +40,7 @@ runs:
         node-version: '18'
 
     - name: TestIO - Install Dependencies
+      shell: bash
       run: npm install
 
     - name: TestIO - Add PR comment for requesting required input
@@ -48,6 +49,7 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         TESTIO_CREATE_COMMENT_URL: ${{ github.event.comment.html_url }}
+      shell: bash
       run: npx ts-node ${{github.action_path}}/src/addPRcomment.ts
 
     - name: TestIO - Retrieve input and create payload
@@ -57,6 +59,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         TESTIO_SUBMIT_COMMENT_ID: ${{ github.event.comment.id }}
         TESTIO_SUBMIT_COMMENT_URL: ${{ github.event.comment.html_url }}
+      shell: bash
       run: npx ts-node ${{github.action_path}}/src/retrievePayload.ts
 
     - name: TestIO - Trigger TestIO Test
@@ -65,6 +68,7 @@ runs:
       env:
         TESTIO_PRODUCT_ID: ${{ inputs.testio-product-id }}
         TESTIO_TOKEN: ${{ inputs.testio-token }}
+      shell: bash
       run: npx ts-node ${{github.action_path}}/src/triggerTest.ts
 
     - name: TestIO - Report Success
@@ -76,6 +80,7 @@ runs:
         TESTIO_SLUG: ${{ inputs.testio-slug }}
         TESTIO_SUBMIT_COMMENT_ID: ${{ steps.payload.outputs.testio-submit-comment-id }}
         TESTIO_CREATE_COMMENT_URL: ${{ steps.payload.outputs.testio-create-comment-url }}
+      shell: bash
       run: npx ts-node ${{github.action_path}}/src/reportSuccess.ts
 
     - name: TestIO - Report Failure
@@ -83,6 +88,7 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         TESTIO_CREATE_COMMENT_URL: ${{ steps.payload.outputs.testio-create-comment-url }}
+      shell: bash
       run: npx ts-node ${{github.action_path}}/src/reportFailure.ts
 
 branding:
