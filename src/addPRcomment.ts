@@ -3,10 +3,10 @@ import * as fs from "fs";
 import {Octokit} from "@octokit/rest";
 
 async function addComment() {
-    const commentPrepareTemplateFile = 'resources/exploratory_test_comment_prepare_template.md';
+    const commentPrepareTemplateFile = `${process.env.TESTIO_SCRIPTS_DIR}/resources/exploratory_test_comment_prepare_template.md`;
     const commentTemplate = fs.readFileSync(commentPrepareTemplateFile, 'utf8');
 
-    const commentPrepareJsonFile = 'resources/exploratory_test_comment_prepare.json';
+    const commentPrepareJsonFile = `${process.env.TESTIO_SCRIPTS_DIR}/resources/exploratory_test_comment_prepare.json`;
     const jsonString = fs.readFileSync(commentPrepareJsonFile, 'utf8');
 
     const createCommentUrl = `${process.env.TESTIO_CREATE_COMMENT_URL}`;

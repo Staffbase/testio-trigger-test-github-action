@@ -4,7 +4,7 @@ import {Octokit} from "@octokit/rest";
 
 async function reportFailure() {
     const errorFileName = `${process.env.TESTIO_ERROR_MSG_FILE}`;
-    const errorMessageFilePath = `resources/${errorFileName}`;
+    const errorMessageFilePath = `${process.env.TESTIO_SCRIPTS_DIR}/resources/${errorFileName}`;
     const createCommentUrl = `${process.env.TESTIO_CREATE_COMMENT_URL}`;
 
     let commentFailureBody = "";

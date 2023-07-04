@@ -10,10 +10,10 @@ async function reportSuccess() {
     const testURL = "https://" + testioSlug + ".test.io/products/" + testioProductId + "/test_cycles/" + testioCreatedTestId;
     const createCommentUrl = `${process.env.TESTIO_CREATE_COMMENT_URL}`;
 
-    const payloadFile = 'resources/testio_payload.json';
+    const payloadFile = `${process.env.TESTIO_SCRIPTS_DIR}/resources/testio_payload.json`;
     const payload = JSON.parse(fs.readFileSync(payloadFile, 'utf8'));
 
-    const commentSuccessTemplateFile = 'resources/exploratory_test_comment_success_template.md';
+    const commentSuccessTemplateFile = `${process.env.TESTIO_SCRIPTS_DIR}/resources/exploratory_test_comment_success_template.md`;
     const commentSuccessTemplate = fs.readFileSync(commentSuccessTemplateFile, 'utf8');
     const testioTestUrlPlaceholder = "$$TESTIO_TEST_URL$$";
     const sentPayloadPlaceholder = "$$SENT_PAYLOAD$$";

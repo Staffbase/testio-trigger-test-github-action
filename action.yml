@@ -32,6 +32,7 @@ runs:
     - name: TestIO - Init global environment
       shell: bash
       run: |-
+        echo "TESTIO_SCRIPTS_DIR=${{github.action_path}}" >> $GITHUB_ENV
         echo "TESTIO_ERROR_MSG_FILE=errorToComment.msg" >> $GITHUB_ENV
 
     - name: TestIO - Set up Node
