@@ -50,6 +50,7 @@ runs:
       shell: bash
       run: |-
         ls -lisa
+        ls -lisa ${{github.action_path}}
 
     - name: TestIO - Add PR comment for requesting required input
       id: prepare
