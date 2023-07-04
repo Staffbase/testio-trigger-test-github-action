@@ -46,6 +46,11 @@ runs:
       shell: bash
       run: npm install
 
+    - name: TestIO - Log output             // TODO remove
+      shell: bash
+      run: |-
+        ls -lisa
+
     - name: TestIO - Add PR comment for requesting required input
       id: prepare
       if: startsWith(github.event.comment.body, '@bot-testio exploratory-test create')
