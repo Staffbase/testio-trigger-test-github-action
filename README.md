@@ -34,14 +34,14 @@ jobs:
 To trigger a test on TestIO multiple steps are required:
 
 1. Add the comment `@bot-testio exploratory-test create` to the PR from which the test should be triggered.
-   <img src="docs/assets/images/test-create.png" alt="create test comment" width="300" />
+   <img src="docs/assets/images/test-create.png" alt="create test comment" />
 2. The action acknowledges your intention to trigger a new test by commenting in the PR with a message for requesting required information:
-   <img src="docs/assets/images/test-prepare.png" alt="prepare test comment" width="300" />
+   <img src="docs/assets/images/test-prepare.png" alt="prepare test comment" />
 3. Provide the required information by editing the comment added in step 2.
 4. Once you entered all the required information in the edited comment you need to replace `@bot-testio exploratory-test preparation` by `@bot-testio exploratory-test submit`.
-   <img src="docs/assets/images/test-submit.png" alt="submit test comment" width="300" />
+   <img src="docs/assets/images/test-submit.png" alt="submit test comment" />
 5. This triggers the test on TestIO and successful creation is commented back as a new comment.
-   <img src="docs/assets/images/test-success.png" alt="success test comment" width="300" />
+   <img src="docs/assets/images/test-success.png" alt="success test comment" />
 
 ## Action Specification:
 
