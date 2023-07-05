@@ -32,6 +32,7 @@ runs:
     - name: TestIO - Init global environment
       shell: bash
       run: |-
+        echo "TESTIO_SCRIPTS_DIR=${{github.action_path}}" >> $GITHUB_ENV
         echo "TESTIO_ERROR_MSG_FILE=errorToComment.msg" >> $GITHUB_ENV
 
     - name: TestIO - Set up Node
@@ -41,7 +42,9 @@ runs:
 
     - name: TestIO - Install Dependencies
       shell: bash
-      run: npm install
+      run: |-
+        cd ${{github.action_path}}
+        npm install
 
     - name: TestIO - Add PR comment for requesting required input
       id: prepare

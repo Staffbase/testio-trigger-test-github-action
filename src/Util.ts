@@ -84,7 +84,7 @@ export class Util {
     }
 
     public static throwErrorAndPrepareErrorMessage(errorMessage: string, errorMessageFileName: string) {
-        const errorMessageFilePath = `resources/${errorMessageFileName}`;
+        const errorMessageFilePath = `${process.env.TESTIO_SCRIPTS_DIR}/resources/${errorMessageFileName}`;
         fs.writeFileSync(errorMessageFilePath, errorMessage);
         console.error(errorMessage);
         throw new Error(errorMessage);
