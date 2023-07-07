@@ -7,11 +7,19 @@ Once this action is available in your repository you can use it by adding and ed
 
 > ##### Note: For being able to use this action you need to be a customer of TestIO.
 
-## Usage
+## Enable the Action in Your Repository 
 
-### Enable the Action in Your Repository 
+To enable the action in your repository we recommend adding a new workflow to the `.github/workflows` folder.
+It must look like the following workflow. 
+
+### Workflow
 
 ```yaml
+name: TestIO - Trigger test from PR
+on:
+   issue_comment:
+      types: [created, edited]
+
 jobs:
   testio-trigger-test:
 
@@ -29,7 +37,20 @@ jobs:
           testio-token: ${{ secrets.YOUR_TESTIO_TOKEN }}
 ```
 
-### Use the Action in a PR
+### Reusable Workflow
+
+You can also use a reusable workflow to enable this action in your repository described here: [https://github.com/Staffbase/gha-workflows#testio](https://github.com/Staffbase/gha-workflows#testio)
+
+### Inputs
+
+| Input               | Description                                                  | Required                                                   |
+| ------------------- | ------------------------------------------------------------ | ---------------------------------------------------------- |
+| `testio-slug`       | the slug you received from TestIO                            | NO, but effectively YES because it defaults to `staffbase` |
+| `testio-product-id` | ID of the product on the TestIO platform to which the triggered test should be assigned to | YES                                                        |
+| `github-token`      | GitHub token to be used for commenting in a PR               | YES                                                        |
+| `testio-token`      | TestIO token of a user for which the triggered test is created | YES                                                        |
+
+## Use the Action to trigger a new test on TestIO from a PR
 
 To trigger a test on TestIO multiple steps are required:
 
@@ -42,17 +63,6 @@ To trigger a test on TestIO multiple steps are required:
    <img src="docs/assets/images/test-submit.png" alt="submit test comment" />
 5. This triggers the test on TestIO and successful creation is commented back as a new comment.
    <img src="docs/assets/images/test-success.png" alt="success test comment" />
-
-## Action Specification:
-
-### Inputs
-
-| Input              | Description                                                  | Required |
-| ------------------ | ------------------------------------------------------------ | -------- |
-| `testio-slug` | TODO | true     |
-| `testio-product-id`   | TODO | false    |
-| `github-token` | TODO                   | true     |
-| `testio-token` | TODO               | true     |
 
 ## Contributing
 
