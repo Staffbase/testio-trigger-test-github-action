@@ -1,68 +1,86 @@
-# Staffbase Open Source Repository Template
+# Trigger a Test on the Crowd-Testing Platform TestIO from a Pull Request 
 
-This repository should be used as a template or model for projects we like to publish as Open Source.
+## Description
 
-Please note this is the instance for projects we want to publish below the **Apache 2.0** license. There might be other permitted licenses in the future.
+This GitHub Action can be used to trigger a new test on the external crowd-testing platform [TestIO](https://test.io/services/exploratory-testing) from a GitHub pull request (PR).
+Once this action is available in your repository you can use it by adding and editing specific comments in any PR.
 
-Please adhere to the [**Staffbase Open Source Policy**](https://mitarbeiterapp.atlassian.net/wiki/spaces/LEGAL/pages/1369178123/Staffbase+Open+Source+Policy). Do not publish anything without following this policy.
+> ##### Note: For being able to use this action you need to be a customer of TestIO.
 
-This repository shows the structure of an compliant OSS project with the following documents and tools: 
+## Enable the Action in Your Repository 
 
-* [LICENSE](../master/LICENSE) file
-* [CONTRIBUTING.md](../master/CONTRIBUTING.md) file (clarifying how to contribute)
-* [CLA.md](../master/CLA.md) file (a Contributor License Agreement, see below)
-* Every source code file ([example](../master/src/main/your-code-files-here.js)) must start with a license header (see below) 
-* A [configuration](../master/.github/workflows/cla.yml) for the CLA Assistant Lite
+To enable the action in your repository we recommend adding a new workflow to the `.github/workflows` folder.
+It must look like the following workflow. 
 
-## Source File License Header
-Please adjust the block comment syntax to your programming language ;)
+### Workflow
 
-Please adjust the year(s) at the copyright statement following [this section at our Open Source Policy](https://mitarbeiterapp.atlassian.net/wiki/spaces/LEGAL/pages/1600422442/Copyright+Statements+in+Staffbase+Code+Files).
+```yaml
+name: TestIO - Trigger test from PR
+on:
+   issue_comment:
+      types: [created, edited]
 
+jobs:
+  testio-trigger-test:
+
+    name: TestIO - Trigger Test
+    runs-on: ubuntu-22.04
+    if: startsWith(github.event.comment.body, '@bot-testio exploratory-test')     # this is the prefix all subsequent comments must start with
+
+    steps:
+      - name: Request required input and trigger test on TestIO
+        uses: Staffbase/testio-trigger-test-github-action@v1.0.0
+        with:
+          testio-slug: your-testio-slug
+          testio-product-id: your-testio-product-id
+          github-token: ${{ secrets.YOUR_GITHUB_TOKEN }}
+          testio-token: ${{ secrets.YOUR_TESTIO_TOKEN }}
 ```
-/*
-Copyright 2020, Staffbase GmbH and contributors.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
+### Reusable Workflow
 
-You may obtain a copy of the License at
-    http://www.apache.org/licenses/LICENSE-2.0
-    
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+You can also use a reusable workflow to enable this action in your repository described here: [https://github.com/Staffbase/gha-workflows#testio](https://github.com/Staffbase/gha-workflows#testio)
 
-```
+### Inputs
 
-## What is an CLA or *Contributor License Agreement*?
-- In order to allow other Non-Staffpranos to contribute to our public repositories, those contributors need to sign an agreement to lower the risk for Staffbase to introduce serious legal issues when incorporating outside contributions.
+| Input               | Description                                                  | Required                                                   |
+| ------------------- | ------------------------------------------------------------ | ---------------------------------------------------------- |
+| `testio-slug`       | the slug you received from TestIO                            | NO, but effectively YES because it defaults to `staffbase` |
+| `testio-product-id` | ID of the product on the TestIO platform to which the triggered test should be assigned to | YES                                                        |
+| `github-token`      | GitHub token to be used for commenting in a PR               | YES                                                        |
+| `testio-token`      | TestIO token of a user for which the triggered test is created | YES                                                        |
 
-- That's a common process at the Open Source community and you find lots of those agreements at GitHub.
+## Use the Action to trigger a new test on TestIO from a PR
 
-- Staffbase Legal has created our own CLA [which you can find right here](../master/CLA.md).  
+To trigger a test on TestIO multiple steps are required:
 
-- To streamline this digital signing process, there are some tools around that integrate with GitHub.
+1. Add the comment `@bot-testio exploratory-test create` to the PR from which the test should be triggered.
+   <img src="docs/assets/images/test-create.png" alt="create test comment" />
+2. The action acknowledges your intention to trigger a new test by commenting in the PR with a message for requesting required information:
+   <img src="docs/assets/images/test-prepare.png" alt="prepare test comment" />
+3. Provide the required information by editing the comment added in step 2.
+4. Once you entered all the required information in the edited comment you need to replace `@bot-testio exploratory-test preparation` by `@bot-testio exploratory-test submit`.
+   <img src="docs/assets/images/test-submit.png" alt="submit test comment" />
+5. This triggers the test on TestIO and successful creation is commented back as a new comment.
+   <img src="docs/assets/images/test-success.png" alt="success test comment" />
 
-- We're using CLA Assistant and currently experimenting with the *Lite* version, because it uses a local storage (and is not connecting another SaaS solution) of the signatures and runs as a GitHub Action directly below the respective repository.
+## Contributing
 
-- This GitHub Action adds a check to every Pull Request and blocks the merging until all contributors have signed the CLA (by commenting a line like "I have read the CLA Document and I hereby sign the CLA" to the PR).
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
+## License
 
-## How to adjust the CLA Assistant Lite?
-The central configuration is below the GitHub Action configuration: 
+This project is licensed under the Apache-2.0 License - see the [LICENSE.md](LICENSE) file for details.
 
-[.github/workflows/cla.yml](../master/.github/workflows/cla.yml)
-
-- The signatures are simply stored within a JSON document
-- This document gets updated as soon as a contributor signs the CLA
-- Since the main (legacy master) branch should be protected, the default branch for those signatures is now *signatures*. Make sure to create this branch initially.
-- **Important** You need to set the `PERSONAL_ACCESS_TOKEN` as secret. See https://github.
-  com/cla-assistant/github-action#6-adding-personal-access-token-as-a-secret
-- You can also add whitelisted users, who don't need to sign the CLA. Please do this only with Staffpranos.
-- **Important**: Once a Staffprano has left Staffbase, we need to make sure to remove this user from those whitelists (!).
-
-
+<table>
+  <tr>
+    <td>
+      <img src="docs/assets/images/staffbase.png" alt="Staffbase GmbH" width="96" />
+    </td>
+    <td>
+      <b>Staffbase GmbH</b>
+      <br />Staffbase is an internal communications platform built to revolutionize the way you work and unite your company. Staffbase is hiring: <a href="https://staffbase.com/jobs/" target="_blank" rel="noreferrer">staffbase.com/jobs</a>
+      <br /><a href="https://github.com/Staffbase" target="_blank" rel="noreferrer">GitHub</a> | <a href="https://staffbase.com/" target="_blank" rel="noreferrer">Website</a> | <a href="https://staffbase.com/jobs/" target="_blank" rel="noreferrer">Jobs</a>
+    </td>
+  </tr>
+</table>
