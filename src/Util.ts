@@ -45,7 +45,7 @@ export class Util {
         const titleBase = `[${owner}/${repo}/${pr}]${prTitle}`;
         const testioPayload = {
             exploratory_test: {
-                test_title: Util.truncateString(titleBase, 80, "...", false),
+                test_title: titleBase,
                 test_environment: {
                     title: Util.truncateString(titleBase, 80, "[test environment]", false),
                     url: prepareObject.test_environment.url,
