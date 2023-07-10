@@ -42,12 +42,12 @@ export class Util {
 
     public static convertPrepareObjectToTestIOPayload(prepareObject: any, repo: string, owner: string, pr: number, prTitle: string): any {
         // 80 is restriction from TestIO
-        const titleBase = Util.truncateString(`[${owner}/${repo}/${pr}]${prTitle}`, 80, "...", false);
+        const titleBase = `[${owner}/${repo}/${pr}]${prTitle}`;
         const testioPayload = {
             exploratory_test: {
-                test_title: titleBase,
+                test_title: Util.truncateString(titleBase, 80, "...", false),
                 test_environment: {
-                    title: `${titleBase} [test environment]`,
+                    title: Util.truncateString(titleBase, 80, "[test environment]", false),
                     url: prepareObject.test_environment.url,
                     access: prepareObject.test_environment.access,
                 },
