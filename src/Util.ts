@@ -40,12 +40,13 @@ export class Util {
         return {valid, validation};
     }
 
-    public static convertPrepareObjectToTestIOPayload(prepareObject: any, repo: string, owner: string, pr: number): any {
+    public static convertPrepareObjectToTestIOPayload(prepareObject: any, repo: string, owner: string, pr: number, prTitle: string): any {
+        const titleBase = `[${owner}/${repo}/${pr}]${prTitle}`;
         const testioPayload = {
             exploratory_test: {
-                test_title: `${owner}/${repo}/${pr}`,
+                test_title: titleBase,
                 test_environment: {
-                    title: `${owner}/${repo}/${pr} test environment`,
+                    title: `${titleBase} [test environment]`,
                     url: prepareObject.test_environment.url,
                     access: prepareObject.test_environment.access,
                 },

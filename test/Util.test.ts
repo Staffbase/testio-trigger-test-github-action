@@ -66,10 +66,11 @@ describe("TestIO Trigger-from-PR logic", () => {
         const owner = "Staffbase";
         const pr = 666;
         const commentID = 123456;
-        const testioPayload = Util.convertPrepareObjectToTestIOPayload(prepareObject, repo, owner, pr);
-        const testName = `${owner}/${repo}/${pr}`;
+        const prTitle = "My awesome feature";
+        const testioPayload = Util.convertPrepareObjectToTestIOPayload(prepareObject, repo, owner, pr, prTitle);
+        const testName = `[${owner}/${repo}/${pr}]${prTitle}`;
         expect(testioPayload.exploratory_test.test_title).toBe(testName);
-        expect(testioPayload.exploratory_test.test_environment.title).toBe(testName + " test environment");
+        expect(testioPayload.exploratory_test.test_environment.title).toBe(testName + " [test environment]");
         expect(testioPayload.exploratory_test.test_environment.url).toBe(prepareObject.test_environment.url);
         expect(testioPayload.exploratory_test.test_environment.access).toBe(prepareObject.test_environment.access);
         expect(testioPayload.exploratory_test.features[0].title).toBe(prepareObject.feature.title);
