@@ -65,7 +65,7 @@ async function createPayload() {
         Util.throwErrorAndPrepareErrorMessage("Provided json is not conform to schema", errorFileName);
     }
 
-    const pullRequest:any = await octokit.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
+    const pullRequest = await octokit.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
         owner: github.context.repo.owner,
         repo: github.context.repo.repo,
         pull_number: github.context.issue.number,
@@ -73,8 +73,7 @@ async function createPayload() {
             'X-GitHub-Api-Version': '2022-11-28'
         }
     })
-
-    const prTitle = pullRequest.title;
+    const prTitle = pullRequest.data.title;
     if (!prTitle) {
         console.log("The pull request received:");
         console.log(JSON.stringify(pullRequest, null, 2));
