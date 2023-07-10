@@ -34,8 +34,8 @@ async function triggerTest() {
             console.log("Created test with id: " + createdTest.exploratory_test.id)
             core.setOutput("testio-created-test-id", createdTest.exploratory_test.id);
         })
-        .catch((error) => {
-            Util.throwErrorAndPrepareErrorMessage(error, errorFileName);
+        .catch((error: Error) => {
+            Util.throwErrorAndPrepareErrorMessage(error.message, errorFileName);
         });
 
 }
