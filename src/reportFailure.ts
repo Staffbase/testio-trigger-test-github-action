@@ -30,7 +30,7 @@ async function reportFailure() {
     } else {
         commentFailureBody = "🚨 Failed to trigger a test on TestIO 🚨 Please revise your steps";
     }
-    commentFailureBody += ```\n\nAs response to [test creation trigger](${createCommentUrl}).```;
+    commentFailureBody = commentFailureBody.concat(`\n\nAs response to [test creation trigger](${createCommentUrl}).`);
 
     const octokit = new Octokit({
         auth: process.env.GITHUB_TOKEN
