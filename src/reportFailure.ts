@@ -23,14 +23,23 @@ async function reportFailure() {
     const errorMessageFilePath = `${process.env.TESTIO_SCRIPTS_DIR}/resources/${errorFileName}`;
     const createCommentUrl = `${process.env.TESTIO_CREATE_COMMENT_URL}`;
 
-    let commentFailureBody = "";
+    const payloadFile = `${process.env.TESTIO_SCRIPTS_DIR}/resources/testio_payload.json`;
+    const payloadString = JSON.stringify(JSON.parse(fs.readFileSync(payloadFile, 'utf8')), null, 2);
+
+    let commentErrorMessage = "";
     if (fs.existsSync(errorMessageFilePath)) {
         const errorMessageToReport = fs.readFileSync(errorMessageFilePath, 'utf8');
-        commentFailureBody = "🚨 Failure 🚨 :bangbang: ⛔️ Please check the following error  ⛔️ :bangbang: \n```" + errorMessageToReport + "```";
+        commentErrorMessage = "🚨 Failure 🚨 :bangbang: ⛔️ Please check the following error  ⛔️ :bangbang: \n\n```" + errorMessageToReport + "```";
     } else {
-        commentFailureBody = "🚨 Failed to trigger a test on TestIO 🚨 Please revise your steps";
+        commentErrorMessage = "🚨 Failed to trigger a test on TestIO 🚨 Please revise your steps";
     }
-    commentFailureBody = commentFailureBody.concat(`\n\nAs response to [test creation trigger](${createCommentUrl}).`);
+
+    const commentFailureTemplateFile = `${process.env.TESTIO_SCRIPTS_DIR}/resources/exploratory_test_comment_failure_template.md`;
+    const commentFailureTemplate = fs.readFileSync(commentFailureTemplateFile, 'utf8');
+    const commentErrorMessagePlaceholder = "$$ERROR_MESSAGE$$";
+    const sentPayloadPlaceholder = "$$SENT_PAYLOAD$$";
+    const createCommentUrlPlaceholder = "$$CREATE_COMMENT_URL$$";
+    const failureCommentBody = commentFailureTemplate.replace(commentErrorMessagePlaceholder, commentErrorMessage).replace(sentPayloadPlaceholder, payloadString).replace(createCommentUrlPlaceholder, createCommentUrl);
 
     const octokit = new Octokit({
         auth: process.env.GITHUB_TOKEN
@@ -40,7 +49,7 @@ async function reportFailure() {
         repo: github.context.repo.repo,
         owner: github.context.repo.owner,
         issue_number: github.context.issue.number,
-        body: commentFailureBody
+        body: failureCommentBody
     });
 
 }
