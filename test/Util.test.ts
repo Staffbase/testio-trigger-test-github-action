@@ -82,12 +82,16 @@ describe("TestIO Trigger-from-PR logic", () => {
     it('should truncate looooooong PR titles with ellipsis', () => {
         const maxLength= 80;
         let prTitle = "This is my short title";
-        let truncatedString = Util.truncateString(prTitle, maxLength);
+        let truncatedString = Util.truncateString(prTitle, maxLength, "...", false);
         expect(truncatedString).toBe(prTitle);
 
         prTitle = "This is my veryyyyyyyy loooooooooooooooooooooooooooooooooooooooooooooooooong PR title";
-        truncatedString = Util.truncateString(prTitle, maxLength);
+        truncatedString = Util.truncateString(prTitle, maxLength, "...", false);
         expect(truncatedString).toBe("This is my veryyyyyyyy loooooooooooooooooooooooooooooooooooooooooooooooooong...");
+
+        prTitle = "This is my veryyyyyyyy loooooooooooooooooooooooooooooooooooooooooooooooooooooooong PR title";
+        truncatedString = Util.truncateString(prTitle, maxLength, "[test environment]", true);
+        expect(truncatedString).toBe("This is my veryyyyyyyy looooooooooooooooooooooooooooooooooooo[test environment]");
     });
 
 });
