@@ -42,12 +42,12 @@ export class Util {
 
     public static convertPrepareObjectToTestIOPayload(prepareObject: any, repo: string, owner: string, pr: number, prTitle: string): any {
         // 80 is restriction from TestIO
-        const titleBase = Util.truncateString(`[${owner}/${repo}/${pr}]${prTitle}`, 80);
+        const titleBase = `[${owner}/${repo}/${pr}]${prTitle}`;
         const testioPayload = {
             exploratory_test: {
-                test_title: titleBase,
+                test_title: Util.truncateString(titleBase, 80, "...", false),
                 test_environment: {
-                    title: `${titleBase} [test environment]`,
+                    title: Util.truncateString(titleBase, 80, "[test environment]", false),
                     url: prepareObject.test_environment.url,
                     access: prepareObject.test_environment.access,
                 },
@@ -118,11 +118,11 @@ export class Util {
         return matches[1];
     }
 
-    public static truncateString(string: string, maxLength: number) {
+    public static truncateString(string: string, maxLength: number, suffix: string, forceAddSuffix: boolean) {
         if (string.length <= maxLength) {
             return string;
         }
 
-        return string.slice(0, maxLength - 4) + "...";
+        return string.slice(0, maxLength - suffix.length - 1) + suffix;
     }
 }
