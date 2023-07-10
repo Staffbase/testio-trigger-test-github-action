@@ -95,7 +95,7 @@ export class Util {
             }
             return Promise.reject("Deserializing the data from the response wasn't successful");
         } else {
-            const error = new Error(response.statusText + " at endpoint: " + endpoint + "\n\n " + (await response.json()).error);
+            const error = new Error((await response.json()).error);
             return Promise.reject(error)
         }
     }
