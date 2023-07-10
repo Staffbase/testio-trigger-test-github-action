@@ -65,7 +65,23 @@ async function createPayload() {
         Util.throwErrorAndPrepareErrorMessage("Provided json is not conform to schema", errorFileName);
     }
 
-    const testIOPayload = Util.convertPrepareObjectToTestIOPayload(preparation, github.context.repo.repo, github.context.repo.owner, github.context.issue.number);
+    const pullRequest:any = await octokit.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        pull_number: github.context.issue.number,
+        headers: {
+            'X-GitHub-Api-Version': '2022-11-28'
+        }
+    })
+
+    const prTitle = pullRequest.title;
+    if (!prTitle) {
+        console.log("The pull request received:");
+        console.log(JSON.stringify(pullRequest, null, 2));
+        Util.throwErrorAndPrepareErrorMessage("Could not retrieve title of the PR", errorFileName);
+    }
+
+    const testIOPayload = Util.convertPrepareObjectToTestIOPayload(preparation, github.context.repo.repo, github.context.repo.owner, github.context.issue.number, prTitle);
     console.log("Converted payload:");
     console.log(testIOPayload);
     const payloadFile = `${process.env.TESTIO_SCRIPTS_DIR}/resources/testio_payload.json`;
