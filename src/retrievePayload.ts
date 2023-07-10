@@ -74,7 +74,7 @@ async function createPayload() {
         }
     })
 
-    const prTitle = pullRequest.title;
+    const prTitle = pullRequest.data.title;
     if (!prTitle) {
         console.log("The pull request received:");
         console.log(JSON.stringify(pullRequest, null, 2));
