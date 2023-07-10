@@ -41,7 +41,8 @@ export class Util {
     }
 
     public static convertPrepareObjectToTestIOPayload(prepareObject: any, repo: string, owner: string, pr: number, prTitle: string): any {
-        const titleBase = `[${owner}/${repo}/${pr}]${prTitle}`;
+        // 80 is restriction from TestIO
+        const titleBase = Util.truncateString(`[${owner}/${repo}/${pr}]${prTitle}`, 80);
         const testioPayload = {
             exploratory_test: {
                 test_title: titleBase,
@@ -115,5 +116,13 @@ export class Util {
             return undefined;
         }
         return matches[1];
+    }
+
+    public static truncateString(string: string, maxLength: number) {
+        if (string.length <= maxLength) {
+            return string;
+        }
+
+        return string.slice(0, maxLength - 4) + "...";
     }
 }
