@@ -51,9 +51,6 @@ async function createPayload() {
     try {
         preparation = Util.retrievePrepareObjectFromComment(commentContents);
     } catch (error) {
-        if(typeof error === "Error") {
-            Util.throwErrorAndPrepareErrorMessage(error.message, errorFileName);
-        }
         Util.throwErrorAndPrepareErrorMessage(error.toString(), errorFileName);
     }
 
