@@ -26,7 +26,8 @@ export class Util {
         }
         const jsonContents = matches[expectedIndexOfObject];
         if (!jsonContents) throw new Error("Provided input seems to be empty between ```json and ```");
-        const parsedObject = JSON.parse(jsonContents);
+        const cleanedJson = jsonContents.replace(/[\u0009]/g, " ");
+        const parsedObject = JSON.parse(cleanedJson);
         return parsedObject;
     }
 
