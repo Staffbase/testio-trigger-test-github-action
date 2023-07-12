@@ -51,7 +51,10 @@ async function createPayload() {
     try {
         preparation = Util.retrievePrepareObjectFromComment(commentContents);
     } catch (error) {
-        Util.throwErrorAndPrepareErrorMessage(error.message, errorFileName);
+        if(typeof error === "Error") {
+            Util.throwErrorAndPrepareErrorMessage(error.message, errorFileName);
+        }
+        Util.throwErrorAndPrepareErrorMessage(error.toString(), errorFileName);
     }
 
     const prepareTestSchemaFile = `${process.env.TESTIO_SCRIPTS_DIR}/resources/exploratory_test_comment_prepare_schema.json`;
