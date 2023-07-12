@@ -45,6 +45,9 @@
         "howtofind",
         "user_stories"
       ]
+    },
+    "additionalInstructions": {
+      "type": "string"
     }
   },
   "required": [
