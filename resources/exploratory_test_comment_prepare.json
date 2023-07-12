@@ -10,5 +10,6 @@
     "user_stories": [
       "Add 1 or more user stories here which you want the tester to verify"
     ]
-  }
+  },
+  "additionalInstructions": "(optional, remove it if not needed)"
 }

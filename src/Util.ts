@@ -19,7 +19,7 @@ import Ajv, {ValidateFunction} from "ajv";
 
 export class Util {
 
-    public static getJsonObjectFromComment(regex: RegExp, comment: string, expectedIndexOfObject: number): any {
+    private static getJsonObjectFromComment(regex: RegExp, comment: string, expectedIndexOfObject: number): any {
         const matches = regex.exec(comment);
         if (!matches) {
             throw new Error("Provided comment didn't match");
@@ -61,6 +61,7 @@ export class Util {
                         user_stories: prepareObject.feature.user_stories
                     }
                 ],
+                instructions: (prepareObject.additionalInstructions ? prepareObject.additionalInstructions : null),
                 duration: "2",
                 testing_type: "rapid"
             }

@@ -36,13 +36,13 @@ describe("TestIO Trigger-from-PR logic", () => {
     });
 
     it('should parse an object from the Github preparation comment', () => {
-        const parsedObject = Util.getJsonObjectFromComment( /```json\s(.+)\s```/sm, commentBody, 1);
+        const parsedObject = Util.retrievePrepareObjectFromComment(commentBody);
         expect(parsedObject).not.toBeNull();
     });
 
     it('should validate parsed object against schema', () => {
         const prepareTestSchemaFile = "resources/exploratory_test_comment_prepare_schema.json";
-        const parsedObject = Util.getJsonObjectFromComment( /```json\s(.+)\s```/sm, commentBody, 1);
+        const parsedObject = Util.retrievePrepareObjectFromComment(commentBody);
         const {valid, validation} = Util.validateObjectAgainstSchema(parsedObject, prepareTestSchemaFile);
         if (!valid) {
             if (validation.errors) {
@@ -61,7 +61,7 @@ describe("TestIO Trigger-from-PR logic", () => {
     });
 
     it('should convert prepare object into TestIO payload', () => {
-        const prepareObject = Util.getJsonObjectFromComment( /```json\s(.+)\s```/sm, commentBody, 1);
+        const prepareObject = Util.retrievePrepareObjectFromComment(commentBody);
         const repo = "testio-management";
         const owner = "Staffbase";
         const pr = 666;
@@ -77,6 +77,7 @@ describe("TestIO Trigger-from-PR logic", () => {
         expect(testioPayload.exploratory_test.features[0].description).toBe(prepareObject.feature.description);
         expect(testioPayload.exploratory_test.features[0].howtofind).toBe(prepareObject.feature.howtofind);
         expect(testioPayload.exploratory_test.features[0].user_stories).toBe(prepareObject.feature.user_stories);
+        expect(testioPayload.exploratory_test.instructions).toBe(prepareObject.additionalInstructions);
     });
 
     it('should truncate looooooong PR titles and add suffix', () => {
