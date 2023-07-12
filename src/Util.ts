@@ -47,7 +47,7 @@ export class Util {
                 test_title: titleBase,
                 test_environment: {
                     // 80 is restriction from TestIO
-                    title: Util.truncateString(titleBase, 80, "[test environment]", false),
+                    title: Util.truncateString(titleBase, 80, "[test environment]", true),
                     url: prepareObject.test_environment.url,
                     access: prepareObject.test_environment.access,
                 },
@@ -119,10 +119,14 @@ export class Util {
     }
 
     public static truncateString(string: string, maxLength: number, suffix: string, forceAddSuffix: boolean) {
-        if (string.length <= maxLength) {
+        if (string.length <= maxLength && !forceAddSuffix) {
             return string;
         }
 
-        return string.slice(0, maxLength - suffix.length - 1) + suffix;
+        //if (string.length <= maxLength && forceAddSuffix) {
+            return string.slice(0, maxLength - suffix.length) + suffix;
+        //}
+
+
     }
 }
