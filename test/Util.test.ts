@@ -94,4 +94,14 @@ describe("TestIO Trigger-from-PR logic", () => {
         expect(truncatedString).toBe("This is my veryyyyyyyy loooooooooooooooooooooooooooooooooooooo[test environment]");
     });
 
+    // digging into failing action run https://github.com/Staffbase/testio-management/actions/runs/5527851778/jobs/10084029267
+    it('should parse a failing prepare comment', () => {
+        const failingCommentFile = "testResources/testio-management-pull-65-issuecomment-1630429841.md";
+        const failingComment = fs.readFileSync(failingCommentFile, 'utf8');
+
+        expect(() => Util.retrievePrepareObjectFromComment(failingComment)).not.toThrowError();
+        const prepareObject: any = Util.retrievePrepareObjectFromComment(failingComment);
+        expect(prepareObject).not.toBeUndefined();
+    });
+
 });

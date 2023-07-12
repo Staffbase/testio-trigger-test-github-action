@@ -123,10 +123,13 @@ export class Util {
             return string;
         }
 
-        //if (string.length <= maxLength && forceAddSuffix) {
-            return string.slice(0, maxLength - suffix.length) + suffix;
-        //}
+        return string.slice(0, maxLength - suffix.length) + suffix;
+    }
 
-
+    static retrievePrepareObjectFromComment(comment: string): any | undefined {
+        const jsonRegex = /.*```json\s(.+)\s```.*/sm;       // everything between ```json and ``` so that we can parse it
+        let preparation: any;
+        preparation = Util.getJsonObjectFromComment(jsonRegex, comment, 1);
+        return preparation;
     }
 }
