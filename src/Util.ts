@@ -26,7 +26,8 @@ export class Util {
         }
         const jsonContents = matches[expectedIndexOfObject];
         if (!jsonContents) throw new Error("Provided input seems to be empty between ```json and ```");
-        const parsedObject = JSON.parse(jsonContents);
+        const cleanedJson = jsonContents.replace(/[\u0009]/g, " ");
+        const parsedObject = JSON.parse(cleanedJson);
         return parsedObject;
     }
 
@@ -41,13 +42,13 @@ export class Util {
     }
 
     public static convertPrepareObjectToTestIOPayload(prepareObject: any, repo: string, owner: string, pr: number, prTitle: string): any {
-        // 80 is restriction from TestIO
         const titleBase = `[${owner}/${repo}/${pr}]${prTitle}`;
         const testioPayload = {
             exploratory_test: {
                 test_title: titleBase,
                 test_environment: {
-                    title: Util.truncateString(titleBase, 80, "[test environment]", false),
+                    // 80 is restriction from TestIO
+                    title: Util.truncateString(titleBase, 80, "[test environment]", true),
                     url: prepareObject.test_environment.url,
                     access: prepareObject.test_environment.access,
                 },
@@ -119,10 +120,17 @@ export class Util {
     }
 
     public static truncateString(string: string, maxLength: number, suffix: string, forceAddSuffix: boolean) {
-        if (string.length <= maxLength) {
+        if (string.length <= maxLength && !forceAddSuffix) {
             return string;
         }
 
-        return string.slice(0, maxLength - suffix.length - 1) + suffix;
+        return string.slice(0, maxLength - suffix.length) + suffix;
+    }
+
+    public static retrievePrepareObjectFromComment(comment: string): any | undefined {
+        const jsonRegex = /.*```json\s(.+)\s```.*/sm;       // everything between ```json and ``` so that we can parse it
+        let preparation: any;
+        preparation = Util.getJsonObjectFromComment(jsonRegex, comment, 1);
+        return preparation;
     }
 }

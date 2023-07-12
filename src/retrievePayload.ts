@@ -39,6 +39,7 @@ async function createPayload() {
 
     const commentContents = `${retrievedComment.data.body}`;
     if (!commentContents) Util.throwErrorAndPrepareErrorMessage(`Comment ${commentUrl} seems to be empty`, errorFileName);
+
     const triggerCommentUrl = Util.getUrlFromComment(commentContents);
     if (triggerCommentUrl != undefined) {
         core.setOutput("testio-create-comment-url", triggerCommentUrl);
@@ -46,12 +47,14 @@ async function createPayload() {
         core.setOutput("testio-create-comment-url", "");
     }
 
-    const jsonRegex = /```json\s(.+)\s```/sm;       // everything between ```json and ``` so that we can parse it
     let preparation: any;
     try {
-        preparation = Util.getJsonObjectFromComment(jsonRegex, commentContents, 1);
+        preparation = Util.retrievePrepareObjectFromComment(commentContents);
     } catch (error) {
-        Util.throwErrorAndPrepareErrorMessage(JSON.stringify(error), errorFileName);
+        if (error instanceof Error) {
+            Util.throwErrorAndPrepareErrorMessage(error.message, errorFileName);
+        }
+        Util.throwErrorAndPrepareErrorMessage(String(error), errorFileName);
     }
 
     const prepareTestSchemaFile = `${process.env.TESTIO_SCRIPTS_DIR}/resources/exploratory_test_comment_prepare_schema.json`;

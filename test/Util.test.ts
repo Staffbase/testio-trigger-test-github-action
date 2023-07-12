@@ -70,7 +70,7 @@ describe("TestIO Trigger-from-PR logic", () => {
         const testioPayload = Util.convertPrepareObjectToTestIOPayload(prepareObject, repo, owner, pr, prTitle);
         const testName = `[${owner}/${repo}/${pr}]${prTitle}`;
         expect(testioPayload.exploratory_test.test_title).toBe(testName);
-        expect(testioPayload.exploratory_test.test_environment.title).toBe(testName + " [test environment]");
+        expect(testioPayload.exploratory_test.test_environment.title).toBe(testName + "[test environment]");
         expect(testioPayload.exploratory_test.test_environment.url).toBe(prepareObject.test_environment.url);
         expect(testioPayload.exploratory_test.test_environment.access).toBe(prepareObject.test_environment.access);
         expect(testioPayload.exploratory_test.features[0].title).toBe(prepareObject.feature.title);
@@ -79,7 +79,7 @@ describe("TestIO Trigger-from-PR logic", () => {
         expect(testioPayload.exploratory_test.features[0].user_stories).toBe(prepareObject.feature.user_stories);
     });
 
-    it('should truncate looooooong PR titles with ellipsis', () => {
+    it('should truncate looooooong PR titles and add suffix', () => {
         const maxLength= 80;
         let prTitle = "This is my short title";
         let truncatedString = Util.truncateString(prTitle, maxLength, "...", false);
@@ -87,11 +87,21 @@ describe("TestIO Trigger-from-PR logic", () => {
 
         prTitle = "This is my veryyyyyyyy loooooooooooooooooooooooooooooooooooooooooooooooooong PR title";
         truncatedString = Util.truncateString(prTitle, maxLength, "...", false);
-        expect(truncatedString).toBe("This is my veryyyyyyyy loooooooooooooooooooooooooooooooooooooooooooooooooong...");
+        expect(truncatedString).toBe("This is my veryyyyyyyy loooooooooooooooooooooooooooooooooooooooooooooooooong ...");
 
         prTitle = "This is my veryyyyyyyy loooooooooooooooooooooooooooooooooooooooooooooooooooooooong PR title";
         truncatedString = Util.truncateString(prTitle, maxLength, "[test environment]", true);
-        expect(truncatedString).toBe("This is my veryyyyyyyy looooooooooooooooooooooooooooooooooooo[test environment]");
+        expect(truncatedString).toBe("This is my veryyyyyyyy loooooooooooooooooooooooooooooooooooooo[test environment]");
+    });
+
+    // digging into failing action run https://github.com/Staffbase/testio-management/actions/runs/5527851778/jobs/10084029267
+    it('should parse a failing prepare comment', () => {
+        const failingCommentFile = "testResources/testio-management-pull-65-issuecomment-1630429841.md";
+        const failingComment = fs.readFileSync(failingCommentFile, 'utf8');
+
+        expect(() => Util.retrievePrepareObjectFromComment(failingComment)).not.toThrowError();
+        const prepareObject: any = Util.retrievePrepareObjectFromComment(failingComment);
+        expect(prepareObject).not.toBeUndefined();
     });
 
 });
