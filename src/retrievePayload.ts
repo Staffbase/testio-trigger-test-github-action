@@ -50,7 +50,7 @@ async function createPayload() {
     let preparation: any;
     try {
         preparation = Util.retrievePrepareObjectFromComment(commentContents);
-    } catch (error: Error) {
+    } catch (error) {
         Util.throwErrorAndPrepareErrorMessage(error.message, errorFileName);
     }
 

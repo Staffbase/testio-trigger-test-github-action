@@ -126,7 +126,7 @@ export class Util {
         return string.slice(0, maxLength - suffix.length) + suffix;
     }
 
-    static retrievePrepareObjectFromComment(comment: string): any | undefined {
+    public static retrievePrepareObjectFromComment(comment: string): any | undefined {
         const jsonRegex = /.*```json\s(.+)\s```.*/sm;       // everything between ```json and ``` so that we can parse it
         let preparation: any;
         preparation = Util.getJsonObjectFromComment(jsonRegex, comment, 1);
