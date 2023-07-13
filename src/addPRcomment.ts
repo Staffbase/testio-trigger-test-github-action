@@ -21,11 +21,11 @@ import {TestIOTriggerTestGHA} from "./TestIOTriggerTestGHA";
 
 async function addComment() {
     const gha = TestIOTriggerTestGHA.create(
-        process.env.GITHUB_TOKEN,
+        `${process.env.GITHUB_TOKEN}`,
         github.context.repo.owner,
         github.context.repo.repo,
         github.context.issue.number,
-        process.env.TESTIO_SCRIPTS_DIR
+        `${process.env.TESTIO_SCRIPTS_DIR}`
     );
 
     await gha.addPrepareComment(`${process.env.TESTIO_CREATE_COMMENT_URL}`);
