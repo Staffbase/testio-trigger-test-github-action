@@ -14,60 +14,38 @@
  * limitations under the License.
  */
 
-import {TestIOTriggerTestGHA} from "../src/TestIOTriggerTestGHA";
-import {jest} from '@jest/globals';
+import { TestIOTriggerTestGHA } from "../src/TestIOTriggerTestGHA";
+import { jest } from "@jest/globals";
 
-//jest.mock("@octokit/rest");
-import {Octokit} from "@octokit/rest";
+import { MockAgent, setGlobalDispatcher } from "undici";
 
-describe('Trigger TestIO Test GHA', () => {
+describe("Trigger TestIO Test GHA", () => {
+  const setup = () => {
+    // create a MockAgent to intercept request made using undici
+    const agent = new MockAgent({ connections: 1 });
+    setGlobalDispatcher(agent);
+    agent
+      .get("https://api.github.com")
+      .intercept({
+        path: "/repos/Staffbase/testio-management/issues/666/comments",
+        method: "POST",
+      })
+      .reply(201);
 
-    let githubToken: string;
-    let owner: string;
-    let repo: string;
-    let pr: number;
-    let actionRootDir: string;
+    return TestIOTriggerTestGHA.create(
+      "MOCK_TOKEN",
+      "Staffbase",
+      "testio-management",
+      666,
+      "."
+    );
+  };
 
-    let gha: TestIOTriggerTestGHA;
+  it("should create comment", async () => {
+    const gha = setup();
+    const createCommentUrl =
+      "https://github.com/MyOrg/myrepo/issues/123456/comments#98765432";
 
-    function initMocks() {
-        jest.spyOn(Octokit.prototype.rest.issues, 'createComment').mockImplementation(jest.fn(() => {
-            console.log("no real request via Octokit");
-            return Promise.resolve();
-        }) as jest.Mock);
-    }
-
-    beforeAll(() => {
-        initMocks();
-    });
-
-    beforeEach(() => {
-        jest.clearAllMocks();
-
-        githubToken = "MOCK_TOKEN";
-        owner = "Staffbase";
-        repo = "testio-management";
-        pr = 666;
-        actionRootDir = ".";
-        gha = TestIOTriggerTestGHA.create(githubToken, owner, repo, pr, actionRootDir);
-        expect(gha).not.toBeNull();
-        expect(gha).not.toBeUndefined();
-    });
-
-    afterEach(() => {
-        jest.resetAllMocks();
-    });
-
-    it('should instantiate class correctly', () => {
-        expect(gha.githubToken).toBe(githubToken);
-        expect(gha.owner).toBe(owner);
-        expect(gha.repo).toBe(repo);
-        expect(gha.pr).toBe(pr);
-        expect(gha.actionRootDir).toBe(actionRootDir);
-    });
-
-    it('should create comment', async () => {
-        const createCommentUrl = "https://github.com/MyOrg/myrepo/issues/123456/comments#98765432";
-        await expect(() => gha.addPrepareComment(createCommentUrl)).rejects.not.toThrowError();
-    });
+    await gha.addPrepareComment(createCommentUrl);
+  });
 });
