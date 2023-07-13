@@ -27,7 +27,7 @@ describe("Trigger TestIO Test GHA", () => {
     const pr = 666;
     const actionRootDir = ".";
 
-    const setup = () => {
+    const setupWithMockedFetch = () => {
         // create a MockAgent to intercept request made using undici
         const agent = new MockAgent({connections: 1});
         setGlobalDispatcher(agent);
@@ -43,10 +43,21 @@ describe("Trigger TestIO Test GHA", () => {
         return TestIOTriggerTestGHA.create(githubToken, owner, repo, pr, actionRootDir);
     };
 
+    it('should instantiate class correctly', () => {
+        const gha = TestIOTriggerTestGHA.create(githubToken, owner, repo, pr, actionRootDir);
+        expect(gha.githubToken).toBe(githubToken);
+        expect(gha.owner).toBe(owner);
+        expect(gha.repo).toBe(repo);
+        expect(gha.pr).toBe(pr);
+        expect(gha.actionRootDir).toBe(actionRootDir);
+    });
+
     it("should create comment", async () => {
-        const gha = setup();
+        const gha = setupWithMockedFetch();
+        const commentPrepareTemplateFile = "exploratory_test_comment_prepare_template.md";
+        const commentPrepareJsonFile = "exploratory_test_comment_prepare.json";
         const createCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#987654321`;
-        const createdComment = await gha.addPrepareComment(createCommentUrl);
+        const createdComment = await gha.addPrepareComment(commentPrepareTemplateFile, commentPrepareJsonFile, createCommentUrl);
 
         const expectedComment = fs.readFileSync("testResources/expected-prepare-comment.md", 'utf8');
         expect(createdComment).toBe(expectedComment);

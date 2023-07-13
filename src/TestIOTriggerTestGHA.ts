@@ -59,11 +59,11 @@ export class TestIOTriggerTestGHA {
         return this._actionRootDir;
     }
 
-    public async addPrepareComment(createCommentUrl: string): Promise<string> {
-        const commentPrepareTemplateFile = `${this._actionRootDir}/resources/exploratory_test_comment_prepare_template.md`;
+    public async addPrepareComment(commentPrepareTemplateFileName: string, commentPrepareJsonFileName: string, createCommentUrl: string): Promise<string> {
+        const commentPrepareTemplateFile = `${this._actionRootDir}/resources/${commentPrepareTemplateFileName}`;
         const commentTemplate = fs.readFileSync(commentPrepareTemplateFile, 'utf8');
 
-        const commentPrepareJsonFile = `${this._actionRootDir}/resources/exploratory_test_comment_prepare.json`;
+        const commentPrepareJsonFile = `${this._actionRootDir}/resources/${commentPrepareJsonFileName}`;
         const jsonString = fs.readFileSync(commentPrepareJsonFile, 'utf8');
 
         const requiredInformationPlaceholder = "$$REQUIRED_INFORMATION_TEMPLATE$$";

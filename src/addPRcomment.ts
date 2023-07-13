@@ -28,7 +28,7 @@ async function addComment() {
         `${process.env.TESTIO_SCRIPTS_DIR}`
     );
 
-    await gha.addPrepareComment(`${process.env.TESTIO_CREATE_COMMENT_URL}`);
+    await gha.addPrepareComment(`${process.env.TESTIO_CREATE_COMMENT_URL}`, commentPrepareJsonFile, createCommentUrl);
 }
 
 addComment().then();
