@@ -17,16 +17,17 @@
 import {TestIOTriggerTestGHA} from "../src/TestIOTriggerTestGHA";
 
 import {MockAgent, setGlobalDispatcher} from "undici";
+import fs from "fs";
 
 describe("Trigger TestIO Test GHA", () => {
 
-    const setup = () => {
-        const githubToken = "MOCK_TOKEN";
-        const owner = "Staffbase";
-        const repo = "testio-management";
-        const pr = 666;
-        const actionRootDir = ".";
+    const githubToken = "MOCK_TOKEN";
+    const owner = "Me";
+    const repo = "awesomeRepo";
+    const pr = 666;
+    const actionRootDir = ".";
 
+    const setup = () => {
         // create a MockAgent to intercept request made using undici
         const agent = new MockAgent({connections: 1});
         setGlobalDispatcher(agent);
@@ -44,9 +45,10 @@ describe("Trigger TestIO Test GHA", () => {
 
     it("should create comment", async () => {
         const gha = setup();
-        const createCommentUrl = "https://github.com/MyOrg/myrepo/issues/123456/comments#987654321";
-
+        const createCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#987654321`;
         const createdComment = await gha.addPrepareComment(createCommentUrl);
-        expect(createdComment).not.toBeUndefined();
+
+        const expectedComment = fs.readFileSync("testResources/expected-prepare-comment.md", 'utf8');
+        expect(createdComment).toBe(expectedComment);
     });
 });
