@@ -27,8 +27,10 @@ async function addComment() {
         github.context.issue.number,
         `${process.env.TESTIO_SCRIPTS_DIR}`
     );
+    const commentPrepareTemplateFile = "exploratory_test_comment_prepare_template.md";
+    const commentPrepareJsonFile = "exploratory_test_comment_prepare.json";
 
-    await gha.addPrepareComment(`${process.env.TESTIO_CREATE_COMMENT_URL}`, commentPrepareJsonFile, createCommentUrl);
+    await gha.addPrepareComment(commentPrepareTemplateFile, commentPrepareJsonFile, `${process.env.TESTIO_CREATE_COMMENT_URL}`);
 }
 
 addComment().then();
