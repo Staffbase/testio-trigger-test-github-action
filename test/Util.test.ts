@@ -18,7 +18,7 @@ import {Util} from "../src/Util";
 import fs from "fs";
 import betterAjvErrors from 'better-ajv-errors';
 
-describe("TestIO Trigger-from-PR logic", () => {
+describe("TestIO Trigger-from-PR Util", () => {
 
     let commentBody: string;
 
