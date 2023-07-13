@@ -59,7 +59,7 @@ export class TestIOTriggerTestGHA {
         return this._actionRootDir;
     }
 
-    public async addPrepareComment(createCommentUrl: string) {
+    public async addPrepareComment(createCommentUrl: string): Promise<string> {
         const commentPrepareTemplateFile = `${this._actionRootDir}/resources/exploratory_test_comment_prepare_template.md`;
         const commentTemplate = fs.readFileSync(commentPrepareTemplateFile, 'utf8');
 
@@ -74,15 +74,12 @@ export class TestIOTriggerTestGHA {
             auth: this._githubToken
         });
 
-        const response = await octokit.rest.issues.createComment({
+        await octokit.rest.issues.createComment({
             repo: this._repo,
             owner: this._owner,
             issue_number: this._pr,
             body: commentBody,
         });
-        console.log(JSON.stringify(response));
-        // if (!response.ok) {
-        //     return Promise.reject("Couldn't create a comment");
-        // }
+        return commentBody;
     }
 }

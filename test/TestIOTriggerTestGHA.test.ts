@@ -14,38 +14,39 @@
  * limitations under the License.
  */
 
-import { TestIOTriggerTestGHA } from "../src/TestIOTriggerTestGHA";
-import { jest } from "@jest/globals";
+import {TestIOTriggerTestGHA} from "../src/TestIOTriggerTestGHA";
 
-import { MockAgent, setGlobalDispatcher } from "undici";
+import {MockAgent, setGlobalDispatcher} from "undici";
 
 describe("Trigger TestIO Test GHA", () => {
-  const setup = () => {
-    // create a MockAgent to intercept request made using undici
-    const agent = new MockAgent({ connections: 1 });
-    setGlobalDispatcher(agent);
-    agent
-      .get("https://api.github.com")
-      .intercept({
-        path: "/repos/Staffbase/testio-management/issues/666/comments",
-        method: "POST",
-      })
-      .reply(201);
 
-    return TestIOTriggerTestGHA.create(
-      "MOCK_TOKEN",
-      "Staffbase",
-      "testio-management",
-      666,
-      "."
-    );
-  };
+    const setup = () => {
+        const githubToken = "MOCK_TOKEN";
+        const owner = "Staffbase";
+        const repo = "testio-management";
+        const pr = 666;
+        const actionRootDir = ".";
 
-  it("should create comment", async () => {
-    const gha = setup();
-    const createCommentUrl =
-      "https://github.com/MyOrg/myrepo/issues/123456/comments#98765432";
+        // create a MockAgent to intercept request made using undici
+        const agent = new MockAgent({connections: 1});
+        setGlobalDispatcher(agent);
 
-    await gha.addPrepareComment(createCommentUrl);
-  });
+        agent
+            .get("https://api.github.com")
+            .intercept({
+                path: `/repos/${owner}/${repo}/issues/${pr}/comments`,
+                method: "POST"
+            })
+            .reply(201);
+
+        return TestIOTriggerTestGHA.create(githubToken, owner, repo, pr, actionRootDir);
+    };
+
+    it("should create comment", async () => {
+        const gha = setup();
+        const createCommentUrl = "https://github.com/MyOrg/myrepo/issues/123456/comments#987654321";
+
+        const createdComment = await gha.addPrepareComment(createCommentUrl);
+        expect(createdComment).not.toBeUndefined();
+    });
 });
