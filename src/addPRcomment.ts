@@ -18,10 +18,9 @@ import * as github from "@actions/github";
 import {TestIOTriggerTestGHA} from "./TestIOTriggerTestGHA";
 
 async function addComment() {
+    // TODO handle provided context (default, android, ios)
     const context = process.argv[2]
     console.log("Given context: " + context);
-    console.log("Whole env:");
-    console.log(process.env);
 
     const gha = TestIOTriggerTestGHA.create(
         `${process.env.GITHUB_TOKEN}`,
