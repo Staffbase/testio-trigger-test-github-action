@@ -18,6 +18,8 @@ import {TestIOTriggerTestGHA} from "../src/TestIOTriggerTestGHA";
 
 import {MockAgent, setGlobalDispatcher} from "undici";
 import fs from "fs";
+import {MockInterceptor} from "undici/types/mock-interceptor";
+import MockResponseDataHandler = MockInterceptor.MockResponseDataHandler;
 
 describe("Trigger TestIO Test GHA", () => {
 
@@ -58,10 +60,14 @@ describe("Trigger TestIO Test GHA", () => {
                 path: `/repos/${owner}/${repo}/issues/comments/${submitCommentID}`,
                 method: "GET"
             })
-            .reply(
-                200,
-                retrievedComment
-            );
+            .reply((request) => {
+                return {
+                    statusCode: 200,
+                    data: {
+                        body: retrievedComment
+                    }
+                }
+            });
 
         return TestIOTriggerTestGHA.create(githubToken, owner, repo, pr, actionRootDir);
     };
