@@ -18,6 +18,9 @@ import * as github from "@actions/github";
 import {TestIOTriggerTestGHA} from "./TestIOTriggerTestGHA";
 
 async function addComment() {
+    const context = process.env.npm_config_context;
+    console.log("Given context: " + context);
+
     const gha = TestIOTriggerTestGHA.create(
         `${process.env.GITHUB_TOKEN}`,
         github.context.repo.owner,
