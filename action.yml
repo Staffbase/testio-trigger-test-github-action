@@ -53,16 +53,16 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         TESTIO_CREATE_COMMENT_URL: ${{ github.event.comment.html_url }}
       shell: bash
-      run: npx ts-node ${{github.action_path}}/src/addPRcomment.ts --context=default
+      run: npx ts-node ${{github.action_path}}/src/addPRcomment.ts default
 
-    - name: TestIO - Add PR comment for requesting required input for default context
+    - name: TestIO - Add PR comment for requesting required input for Android context
       id: prepare-android
       if: startsWith(github.event.comment.body, '@bot-testio exploratory-test create android')
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         TESTIO_CREATE_COMMENT_URL: ${{ github.event.comment.html_url }}
       shell: bash
-      run: npx ts-node ${{github.action_path}}/src/addPRcomment.ts --context=android
+      run: npx ts-node ${{github.action_path}}/src/addPRcomment.ts android
 
     - name: TestIO - Retrieve input and create payload
       id: payload

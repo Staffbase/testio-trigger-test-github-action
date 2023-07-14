@@ -18,7 +18,7 @@ import * as github from "@actions/github";
 import {TestIOTriggerTestGHA} from "./TestIOTriggerTestGHA";
 
 async function addComment() {
-    const context = process.env.npm_config_context;
+    const context = process.argv[2]
     console.log("Given context: " + context);
     console.log("Whole env:");
     console.log(process.env);
