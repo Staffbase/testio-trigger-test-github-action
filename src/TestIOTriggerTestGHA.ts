@@ -17,6 +17,8 @@
 import fs from "fs";
 import {Octokit} from "@octokit/rest";
 import * as github from "@actions/github";
+import * as core from "@actions/core";
+import {Util} from "./Util";
 
 export class TestIOTriggerTestGHA {
 
@@ -71,15 +73,32 @@ export class TestIOTriggerTestGHA {
         const commentBody = commentTemplate.replace(requiredInformationPlaceholder, jsonString).replace(createCommentPlaceholder, createCommentUrl);
 
         const octokit = new Octokit({
-            auth: this._githubToken
+            auth: this.githubToken
         });
 
         await octokit.rest.issues.createComment({
-            repo: this._repo,
-            owner: this._owner,
-            issue_number: this._pr,
+            repo: this.repo,
+            owner: this.owner,
+            issue_number: this.pr,
             body: commentBody,
         });
         return commentBody;
+    }
+
+    public async retrieveCommentContent(submitCommentID: number, submitCommentUrl: string, errorFileName: string): Promise<string> {
+        const octokit = new Octokit({
+            auth: this.githubToken
+        });
+
+        const retrievedComment = await octokit.rest.issues.getComment({
+            repo: this.repo,
+            owner: this.owner,
+            comment_id: submitCommentID
+        });
+        core.setOutput("testio-submit-comment-id", submitCommentID);
+
+        const commentContents = `${retrievedComment.data.body}`;
+        if (!commentContents) Util.throwErrorAndPrepareErrorMessage(`Comment ${submitCommentUrl} seems to be empty`, errorFileName);
+        return commentContents;
     }
 }

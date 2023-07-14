@@ -15,8 +15,6 @@
  */
 
 import * as github from "@actions/github";
-import * as fs from "fs";
-import {Octokit} from "@octokit/rest";
 import {TestIOTriggerTestGHA} from "./TestIOTriggerTestGHA";
 
 async function addComment() {
