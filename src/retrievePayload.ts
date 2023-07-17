@@ -25,7 +25,7 @@ async function createPayload() {
     const submitCommentUrl = `${process.env.TESTIO_SUBMIT_COMMENT_URL}`;
     const errorFileName = `${process.env.TESTIO_ERROR_MSG_FILE}`;
 
-    const gha = TestIOTriggerTestGHA.create(
+    const gha = TestIOTriggerTestGHA.createForGithub(
         `${process.env.GITHUB_TOKEN}`,
         github.context.repo.owner,
         github.context.repo.repo,

@@ -23,25 +23,45 @@ import betterAjvErrors from "better-ajv-errors";
 
 export class TestIOTriggerTestGHA {
 
-    private readonly _githubToken: string;
-    private readonly _owner: string;
-    private readonly _repo: string;
-    private readonly _pr: number;
+    private static readonly persistedPayloadFile = 'resources/testio_payload.json';
+
+    private readonly _githubToken?: string;
+    private readonly _owner?: string;
+    private readonly _repo?: string;
+    private readonly _pr?: number;
     private readonly _actionRootDir: string;
     private readonly _errorFileName: string;
+    private readonly _testioProductId?: string;
+    private readonly _testioToken?: string;
 
     // instantiation via constructor only allowed from within this class
-    private constructor(githubToken: string, owner: string, repo: string, pr: number, actionRootDir: string, errorFileName: string) {
+    private constructor(githubToken: undefined | string, owner: undefined | string, repo: undefined | string, pr: undefined | number, actionRootDir: string, errorFileName: string, testioProductId?: string, testioToken?: string) {
         this._githubToken = githubToken;
         this._repo = repo;
         this._pr = pr;
         this._actionRootDir = actionRootDir;
         this._owner = owner;
         this._errorFileName = errorFileName;
+        this._testioProductId = testioProductId;
+        this._testioToken = testioToken;
     }
 
-    static create(githubToken: string, owner: string, repo: string, pr: number, actionRootDir: string, errorFileName: string) {
+    public static createForGithub(githubToken: string, owner: string, repo: string, pr: number, actionRootDir: string, errorFileName: string) {
         return new TestIOTriggerTestGHA(githubToken, owner, repo, pr, actionRootDir, errorFileName);
+    }
+
+    /**
+     * This factory method creates an instance of this class and leaves those properties related to Github uninstantiated.
+     * The intention is to make instantiation of this class easier when the use case doesn't demand for communicating
+     * to the Github API.
+     *
+     * @param testioProductId
+     * @param testioToken
+     * @param actionRootDir
+     * @param errorFileName
+     */
+    public static createForTestIO(testioProductId: string, testioToken: string, actionRootDir: string, errorFileName: string) {
+        return new TestIOTriggerTestGHA(undefined, undefined, undefined, undefined, actionRootDir, errorFileName, testioProductId, testioToken);
     }
 
     public get githubToken() {
@@ -68,7 +88,21 @@ export class TestIOTriggerTestGHA {
         return this._errorFileName;
     }
 
+    public get testioProductId() {
+        return this._testioProductId;
+    }
+
+    public get testioToken() {
+        return this._testioToken;
+    }
+
     public async addPrepareComment(commentPrepareTemplateFileName: string, commentPrepareJsonFileName: string, createCommentUrl: string): Promise<string> {
+        if (!(this.githubToken && this.repo && this.owner && this.pr)) {
+            const errorMessage = "Github properties are not configured";
+            Util.throwErrorAndPrepareErrorMessage(errorMessage, this.errorFileName);
+            return Promise.reject(errorMessage);
+        }
+
         const commentPrepareTemplateFile = `${this._actionRootDir}/resources/${commentPrepareTemplateFileName}`;
         const commentTemplate = fs.readFileSync(commentPrepareTemplateFile, 'utf8');
 
@@ -93,6 +127,12 @@ export class TestIOTriggerTestGHA {
     }
 
     public async retrieveCommentContent(submitCommentID: number, submitCommentUrl: string): Promise<string> {
+        if (!(this.githubToken && this.repo && this.owner && this.pr)) {
+            const errorMessage = "Github properties are not configured";
+            Util.throwErrorAndPrepareErrorMessage(errorMessage, this.errorFileName);
+            return Promise.reject(errorMessage);
+        }
+
         const octokit = new Octokit({
             auth: this.githubToken
         });
@@ -135,6 +175,12 @@ export class TestIOTriggerTestGHA {
     }
 
     public async retrievePrTitle(): Promise<string> {
+        if (!(this.githubToken && this.repo && this.owner && this.pr)) {
+            const errorMessage = "Github properties are not configured";
+            Util.throwErrorAndPrepareErrorMessage(errorMessage, this.errorFileName);
+            return Promise.reject(errorMessage);
+        }
+
         const octokit = new Octokit({
             auth: this.githubToken
         });
@@ -157,6 +203,12 @@ export class TestIOTriggerTestGHA {
     }
 
     public createAndPersistTestIoPayload(prepareObject: any, prTitle: string): any {
+        if (!(this.repo && this.owner && this.pr)) {
+            const errorMessage = "Github properties are not configured";
+            Util.throwErrorAndPrepareErrorMessage(errorMessage, this.errorFileName);
+            return Promise.reject(errorMessage);
+        }
+
         const testIOPayload = Util.convertPrepareObjectToTestIOPayload(
             prepareObject,
             this.repo,
@@ -166,8 +218,28 @@ export class TestIOTriggerTestGHA {
         );
         console.log("Converted payload:");
         console.log(testIOPayload);
-        const payloadFile = `${this.actionRootDir}/resources/testio_payload.json`;
+        const payloadFile = `${this.actionRootDir}/${TestIOTriggerTestGHA.persistedPayloadFile}`;
         fs.writeFileSync(payloadFile, JSON.stringify(testIOPayload));
         return testIOPayload;
+    }
+
+    public async triggerTestIoTest(): Promise<any> {
+        if (!(this.testioToken && this.testioProductId)) {
+            const errorMessage = "TestIO properties are not configured";
+            Util.throwErrorAndPrepareErrorMessage(errorMessage, this.errorFileName);
+            return Promise.reject(errorMessage);
+        }
+
+        const payloadFile = `${this.actionRootDir}/${TestIOTriggerTestGHA.persistedPayloadFile}`;
+
+        const payload = JSON.parse(fs.readFileSync(payloadFile, 'utf8'));
+        console.log("Payload:");
+        console.log(payload);
+
+        const endpoint = `https://api.test.io/customer/v2/products/${this.testioProductId}/exploratory_tests`;
+        const createdTest = await Util.request("POST", endpoint, this.testioToken, payload);
+        console.log("Created test with id: " + createdTest.exploratory_test.id)
+        core.setOutput("testio-created-test-id", createdTest.exploratory_test.id);
+        return createdTest;
     }
 }

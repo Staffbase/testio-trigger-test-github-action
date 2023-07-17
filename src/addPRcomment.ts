@@ -24,7 +24,7 @@ async function addComment() {
     const context = process.argv[2]
     console.log("Given context: " + context);
 
-    const gha = TestIOTriggerTestGHA.create(
+    const gha = TestIOTriggerTestGHA.createForGithub(
         `${process.env.GITHUB_TOKEN}`,
         github.context.repo.owner,
         github.context.repo.repo,
