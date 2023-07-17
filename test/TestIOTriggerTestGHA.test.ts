@@ -28,6 +28,8 @@ describe("Trigger TestIO Test GHA", () => {
     const submitCommentID = 9999999999999;
     const actionRootDir = ".";
     const errorFileName = "../testResourcesTemp/errorToComment.msg";
+    const testioProductId = "333666999";
+    const testioToken = "MY_TESTIO_DUMMY_TOKEN";
 
     const setupWithMockedIssueCreation = () => {
         // create a MockAgent to intercept request made using undici
@@ -101,7 +103,7 @@ describe("Trigger TestIO Test GHA", () => {
 
 
     it('should instantiate class correctly', () => {
-        const gha = TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir, errorFileName);
+        let gha = TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir, errorFileName);
         expect(gha.githubToken).toBe(githubToken);
         expect(gha.owner).toBe(owner);
         expect(gha.repo).toBe(repo);
@@ -110,6 +112,16 @@ describe("Trigger TestIO Test GHA", () => {
         expect(gha.errorFileName).toBe(errorFileName);
         expect(gha.testioProductId).toBeUndefined();
         expect(gha.testioToken).toBeUndefined();
+
+        gha = TestIOTriggerTestGHA.createForTestIO(testioProductId, testioToken, actionRootDir, errorFileName);
+        expect(gha.githubToken).toBeUndefined();
+        expect(gha.owner).toBeUndefined();
+        expect(gha.repo).toBeUndefined();
+        expect(gha.pr).toBeUndefined();
+        expect(gha.actionRootDir).toBe(actionRootDir);
+        expect(gha.errorFileName).toBe(errorFileName);
+        expect(gha.testioProductId).toBe(testioProductId);
+        expect(gha.testioToken).toBe(testioToken);
     });
 
     it("should create comment", async () => {
@@ -172,8 +184,6 @@ describe("Trigger TestIO Test GHA", () => {
     });
 
     it("should trigger a test on TestIO", async () => {
-        const testioProductId = "333666999";
-        const testioToken = "MY_TESTIO_DUMMY_TOKEN";
         const min = 10000;
         const max = 15000;
         // random number between min-max
