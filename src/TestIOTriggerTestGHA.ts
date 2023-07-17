@@ -19,6 +19,7 @@ import {Octokit} from "@octokit/rest";
 import * as github from "@actions/github";
 import * as core from "@actions/core";
 import {Util} from "./Util";
+import betterAjvErrors from "better-ajv-errors";
 
 export class TestIOTriggerTestGHA {
 
@@ -27,18 +28,20 @@ export class TestIOTriggerTestGHA {
     private readonly _repo: string;
     private readonly _pr: number;
     private readonly _actionRootDir: string;
+    private readonly _errorFileName: string;
 
     // instantiation via constructor only allowed from within this class
-    private constructor(githubToken: string, owner: string, repo: string, pr: number, actionRootDir: string) {
+    private constructor(githubToken: string, owner: string, repo: string, pr: number, actionRootDir: string, errorFileName: string) {
         this._githubToken = githubToken;
         this._repo = repo;
         this._pr = pr;
         this._actionRootDir = actionRootDir;
         this._owner = owner;
+        this._errorFileName = errorFileName;
     }
 
-    static create(githubToken: string, owner: string, repo: string, pr: number, actionRootDir: string) {
-        return new TestIOTriggerTestGHA(githubToken, owner, repo, pr, actionRootDir);
+    static create(githubToken: string, owner: string, repo: string, pr: number, actionRootDir: string, errorFileName: string) {
+        return new TestIOTriggerTestGHA(githubToken, owner, repo, pr, actionRootDir, errorFileName);
     }
 
     public get githubToken() {
@@ -59,6 +62,10 @@ export class TestIOTriggerTestGHA {
 
     public get actionRootDir() {
         return this._actionRootDir;
+    }
+
+    public get errorFileName() {
+        return this._errorFileName;
     }
 
     public async addPrepareComment(commentPrepareTemplateFileName: string, commentPrepareJsonFileName: string, createCommentUrl: string): Promise<string> {
@@ -85,7 +92,7 @@ export class TestIOTriggerTestGHA {
         return commentBody;
     }
 
-    public async retrieveCommentContent(submitCommentID: number, submitCommentUrl: string, errorFileName: string): Promise<string> {
+    public async retrieveCommentContent(submitCommentID: number, submitCommentUrl: string): Promise<string> {
         const octokit = new Octokit({
             auth: this.githubToken
         });
@@ -98,7 +105,32 @@ export class TestIOTriggerTestGHA {
         core.setOutput("testio-submit-comment-id", submitCommentID);
 
         const commentContents = `${retrievedComment.data.body}`;
-        if (!commentContents) Util.throwErrorAndPrepareErrorMessage(`Comment ${submitCommentUrl} seems to be empty`, errorFileName);
+        if (!commentContents) Util.throwErrorAndPrepareErrorMessage(`Comment ${submitCommentUrl} seems to be empty`, this.errorFileName);
         return commentContents;
+    }
+
+    retrieveValidPrepareObjectFromComment(retrievedComment: string): any {
+        let preparation: any;
+        try {
+            preparation = Util.retrievePrepareObjectFromComment(retrievedComment);
+        } catch (error) {
+            if (error instanceof Error) {
+                Util.throwErrorAndPrepareErrorMessage(error.message, this.errorFileName);
+            }
+            Util.throwErrorAndPrepareErrorMessage(String(error), this.errorFileName);
+        }
+
+        const prepareTestSchemaFile = `${this.actionRootDir}/resources/exploratory_test_comment_prepare_schema.json`;
+        const {valid, validation} = Util.validateObjectAgainstSchema(preparation, prepareTestSchemaFile);
+        if (!valid) {
+            if (validation.errors) {
+                const output = betterAjvErrors(prepareTestSchemaFile, preparation, validation.errors);
+                console.log(output);
+                Util.throwErrorAndPrepareErrorMessage(`Provided json is not conform to schema: ${output}`, this.errorFileName);
+            }
+            Util.throwErrorAndPrepareErrorMessage("Provided json is not conform to schema", this.errorFileName);
+        }
+
+        return preparation;
     }
 }

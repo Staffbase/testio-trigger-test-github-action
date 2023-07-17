@@ -18,8 +18,6 @@ import {TestIOTriggerTestGHA} from "../src/TestIOTriggerTestGHA";
 
 import {MockAgent, setGlobalDispatcher} from "undici";
 import fs from "fs";
-import {MockInterceptor} from "undici/types/mock-interceptor";
-import MockResponseDataHandler = MockInterceptor.MockResponseDataHandler;
 
 describe("Trigger TestIO Test GHA", () => {
 
@@ -29,6 +27,7 @@ describe("Trigger TestIO Test GHA", () => {
     const pr = 666;
     const submitCommentID = 9999999999999;
     const actionRootDir = ".";
+    const errorFileName = "../testResourcesTemp/errorToComment.msg";
 
     const setupWithMockedIssueCreation = () => {
         // create a MockAgent to intercept request made using undici
@@ -44,7 +43,7 @@ describe("Trigger TestIO Test GHA", () => {
             })
             .reply(201);
 
-        return TestIOTriggerTestGHA.create(githubToken, owner, repo, pr, actionRootDir);
+        return TestIOTriggerTestGHA.create(githubToken, owner, repo, pr, actionRootDir, errorFileName);
     };
 
     const setupWithMockedCommentRetrieval = () => {
@@ -60,20 +59,13 @@ describe("Trigger TestIO Test GHA", () => {
                 path: `/repos/${owner}/${repo}/issues/comments/${submitCommentID}`,
                 method: "GET"
             })
-            .reply((request) => {
-                return {
-                    statusCode: 200,
-                    data: {
-                        body: retrievedComment
-                    }
-                }
-            });
+            .reply(200, {body: retrievedComment}, {headers: {'Content-Type': 'application/json'}});
 
-        return TestIOTriggerTestGHA.create(githubToken, owner, repo, pr, actionRootDir);
+        return TestIOTriggerTestGHA.create(githubToken, owner, repo, pr, actionRootDir, errorFileName);
     };
 
     it('should instantiate class correctly', () => {
-        const gha = TestIOTriggerTestGHA.create(githubToken, owner, repo, pr, actionRootDir);
+        const gha = TestIOTriggerTestGHA.create(githubToken, owner, repo, pr, actionRootDir, errorFileName);
         expect(gha.githubToken).toBe(githubToken);
         expect(gha.owner).toBe(owner);
         expect(gha.repo).toBe(repo);
@@ -95,10 +87,24 @@ describe("Trigger TestIO Test GHA", () => {
     it("should retrieve content of a PR comment after editing", async () => {
         const gha = setupWithMockedCommentRetrieval();
         const submitCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#${submitCommentID}`;
-        const errorFileName = "../testResourcesTemp/errorToComment.msg";
-        const retrievedComment = await gha.retrieveCommentContent(submitCommentID, submitCommentUrl, errorFileName);
+        const retrievedComment = await gha.retrieveCommentContent(submitCommentID, submitCommentUrl);
 
         const expectedComment = fs.readFileSync("testResources/expected-prepare-comment.md", 'utf8');
         expect(retrievedComment).toBe(expectedComment);
+    });
+
+    it("should retrieve prepare object from a retrieved comment of a PR after editing", async () => {
+        const gha = setupWithMockedCommentRetrieval();
+        const submitCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#${submitCommentID}`;
+        const retrievedComment = await gha.retrieveCommentContent(submitCommentID, submitCommentUrl);
+        const prepareObject: any = gha.retrieveValidPrepareObjectFromComment(retrievedComment);
+
+        expect(prepareObject.test_environment.url).toBe("your URL of preview deployment or built bundle from bot-the-builder");
+        expect(prepareObject.test_environment.access).toBe("provide credentials for the tester to access the environment");
+        expect(prepareObject.feature.title).toBe("The name of the feature to be tested");
+        expect(prepareObject.feature.description).toBe("A short description of the feature to be tested");
+        expect(prepareObject.feature.howtofind).toBe("Describe where to find the feature to be tested");
+        expect(prepareObject.feature.user_stories[0]).toBe("Add 1 or more user stories here which you want the tester to verify");
+        expect(prepareObject.additionalInstructions).toBe("(optional, remove it if not needed)");
     });
 });

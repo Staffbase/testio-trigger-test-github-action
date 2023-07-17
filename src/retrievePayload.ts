@@ -20,25 +20,21 @@ import {Octokit} from "@octokit/rest";
 import {Util} from "./Util";
 import betterAjvErrors from "better-ajv-errors";
 import * as fs from "fs";
+import {TestIOTriggerTestGHA} from "./TestIOTriggerTestGHA";
 
 async function createPayload() {
-    const commentID: number = Number(process.env.TESTIO_SUBMIT_COMMENT_ID);
-    const commentUrl = `${process.env.TESTIO_SUBMIT_COMMENT_URL}`;
+    const submitCommentID: number = Number(process.env.TESTIO_SUBMIT_COMMENT_ID);
+    const submitCommentUrl = `${process.env.TESTIO_SUBMIT_COMMENT_URL}`;
     const errorFileName = `${process.env.TESTIO_ERROR_MSG_FILE}`;
 
-    const octokit = new Octokit({
-        auth: process.env.GITHUB_TOKEN
-    });
-
-    const retrievedComment = await octokit.rest.issues.getComment({
-        repo: github.context.repo.repo,
-        owner: github.context.repo.owner,
-        comment_id: commentID
-    });
-    core.setOutput("testio-submit-comment-id", commentID);
-
-    const commentContents = `${retrievedComment.data.body}`;
-    if (!commentContents) Util.throwErrorAndPrepareErrorMessage(`Comment ${commentUrl} seems to be empty`, errorFileName);
+    const gha = TestIOTriggerTestGHA.create(
+        `${process.env.GITHUB_TOKEN}`,
+        github.context.repo.owner,
+        github.context.repo.repo,
+        github.context.issue.number,
+        `${process.env.TESTIO_SCRIPTS_DIR}`
+    );
+    const commentContents = await gha.retrieveCommentContent(submitCommentID, submitCommentUrl, errorFileName);
 
     const triggerCommentUrl = Util.getUrlFromComment(commentContents);
     if (triggerCommentUrl != undefined) {
