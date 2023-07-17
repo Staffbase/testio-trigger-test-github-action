@@ -64,6 +64,24 @@ describe("Trigger TestIO Test GHA", () => {
         return TestIOTriggerTestGHA.create(githubToken, owner, repo, pr, actionRootDir, errorFileName);
     };
 
+    const setupWithMockedPrTitleRetrieval = (expectedPrTitle: string) => {
+        // create a MockAgent to intercept request made using undici
+        const agent = new MockAgent({connections: 1});
+        setGlobalDispatcher(agent);
+
+        const retrievedComment: string = fs.readFileSync("testResources/expected-prepare-comment.md", 'utf8');
+        // https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#get-a-pull-request
+        agent
+            .get("https://api.github.com")
+            .intercept({
+                path: `/repos/${owner}/${repo}/pulls/${pr}`,
+                method: "GET"
+            })
+            .reply(200, {title: expectedPrTitle}, {headers: {'Content-Type': 'application/json'}});
+
+        return TestIOTriggerTestGHA.create(githubToken, owner, repo, pr, actionRootDir, errorFileName);
+    }
+
     it('should instantiate class correctly', () => {
         const gha = TestIOTriggerTestGHA.create(githubToken, owner, repo, pr, actionRootDir, errorFileName);
         expect(gha.githubToken).toBe(githubToken);
@@ -71,6 +89,7 @@ describe("Trigger TestIO Test GHA", () => {
         expect(gha.repo).toBe(repo);
         expect(gha.pr).toBe(pr);
         expect(gha.actionRootDir).toBe(actionRootDir);
+        expect(gha.errorFileName).toBe(errorFileName);
     });
 
     it("should create comment", async () => {
@@ -106,5 +125,29 @@ describe("Trigger TestIO Test GHA", () => {
         expect(prepareObject.feature.howtofind).toBe("Describe where to find the feature to be tested");
         expect(prepareObject.feature.user_stories[0]).toBe("Add 1 or more user stories here which you want the tester to verify");
         expect(prepareObject.additionalInstructions).toBe("(optional, remove it if not needed)");
+    });
+
+    it("should retrieve PR title", async () => {
+        const expectedPrTitle = "test: this is my test PR title";
+        const gha = setupWithMockedPrTitleRetrieval(expectedPrTitle);
+        const prTitle: string = await gha.retrievePrTitle();
+
+        expect(prTitle).toBe(expectedPrTitle);
+    });
+
+    it("should create TestIO payload and persist it in a file", async () => {
+        const retrievedComment: string = fs.readFileSync("testResources/expected-prepare-comment.md", 'utf8');
+        let gha = TestIOTriggerTestGHA.create(githubToken, owner, repo, pr, actionRootDir, errorFileName);
+        const prepareObject: any = gha.retrieveValidPrepareObjectFromComment(retrievedComment);
+        const prTitle = "test: this is my test PR title";
+
+        // we need to re-instantiate in order to change the action root dir
+        gha = TestIOTriggerTestGHA.create(githubToken, owner, repo, pr, actionRootDir + "/testResourcesTemp", errorFileName);
+        gha.createAndPersistTestIoPayload(prepareObject, prTitle);
+
+        const payloadFile = "testResourcesTemp/resources/testio_payload.json";
+        const storedPayload = JSON.stringify(JSON.parse(fs.readFileSync(payloadFile, 'utf8')), null, 2);
+        const expectedPayload = fs.readFileSync("testResources/expected-payload.json", 'utf8');
+        expect(storedPayload).toBe(expectedPayload);
     });
 });

@@ -18,6 +18,8 @@ import * as github from "@actions/github";
 import {TestIOTriggerTestGHA} from "./TestIOTriggerTestGHA";
 
 async function addComment() {
+    const errorFileName = `${process.env.TESTIO_ERROR_MSG_FILE}`;
+
     // TODO handle provided context (default, android, ios)
     const context = process.argv[2]
     console.log("Given context: " + context);
@@ -27,7 +29,8 @@ async function addComment() {
         github.context.repo.owner,
         github.context.repo.repo,
         github.context.issue.number,
-        `${process.env.TESTIO_SCRIPTS_DIR}`
+        `${process.env.TESTIO_SCRIPTS_DIR}`,
+        errorFileName
     );
     const commentPrepareTemplateFile = "exploratory_test_comment_prepare_template.md";
     const commentPrepareJsonFile = "exploratory_test_comment_prepare.json";

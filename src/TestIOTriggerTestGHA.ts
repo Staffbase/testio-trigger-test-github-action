@@ -109,7 +109,7 @@ export class TestIOTriggerTestGHA {
         return commentContents;
     }
 
-    retrieveValidPrepareObjectFromComment(retrievedComment: string): any {
+    public retrieveValidPrepareObjectFromComment(retrievedComment: string): any {
         let preparation: any;
         try {
             preparation = Util.retrievePrepareObjectFromComment(retrievedComment);
@@ -132,5 +132,42 @@ export class TestIOTriggerTestGHA {
         }
 
         return preparation;
+    }
+
+    public async retrievePrTitle(): Promise<string> {
+        const octokit = new Octokit({
+            auth: this.githubToken
+        });
+
+        const pullRequest = await octokit.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
+            owner: this.owner,
+            repo: this.repo,
+            pull_number: this.pr,
+            headers: {
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
+        })
+        const prTitle = pullRequest.data.title;
+        if (!prTitle) {
+            console.log("The pull request received:");
+            console.log(JSON.stringify(pullRequest, null, 2));
+            Util.throwErrorAndPrepareErrorMessage("Could not retrieve title of the PR", this.errorFileName);
+        }
+        return prTitle;
+    }
+
+    public createAndPersistTestIoPayload(prepareObject: any, prTitle: string): any {
+        const testIOPayload = Util.convertPrepareObjectToTestIOPayload(
+            prepareObject,
+            this.repo,
+            this.owner,
+            this.pr,
+            prTitle
+        );
+        console.log("Converted payload:");
+        console.log(testIOPayload);
+        const payloadFile = `${this.actionRootDir}/resources/testio_payload.json`;
+        fs.writeFileSync(payloadFile, JSON.stringify(testIOPayload));
+        return testIOPayload;
     }
 }
