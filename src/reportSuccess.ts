@@ -17,6 +17,7 @@
 import * as github from "@actions/github";
 import {Octokit} from "@octokit/rest";
 import fs from "fs";
+import {TestIOTriggerTestGHA} from "./TestIOTriggerTestGHA";
 
 async function reportSuccess() {
     const submitCommentID: number = Number(process.env.TESTIO_SUBMIT_COMMENT_ID);
@@ -26,7 +27,7 @@ async function reportSuccess() {
     const testURL = "https://" + testioSlug + ".test.io/products/" + testioProductId + "/test_cycles/" + testioCreatedTestId;
     const createCommentUrl = `${process.env.TESTIO_CREATE_COMMENT_URL}`;
 
-    const payloadFile = `${process.env.TESTIO_SCRIPTS_DIR}/resources/testio_payload.json`;
+    const payloadFile = `${process.env.TESTIO_SCRIPTS_DIR}/${TestIOTriggerTestGHA.persistedPayloadFile}`;
     const payloadString = JSON.stringify(JSON.parse(fs.readFileSync(payloadFile, 'utf8')), null, 2);
 
     const commentSuccessTemplateFile = `${process.env.TESTIO_SCRIPTS_DIR}/resources/exploratory_test_comment_success_template.md`;

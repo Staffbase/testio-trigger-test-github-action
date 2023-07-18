@@ -17,8 +17,9 @@
 import {Util} from "../src/Util";
 import fs from "fs";
 import betterAjvErrors from 'better-ajv-errors';
+import {MockAgent, setGlobalDispatcher} from "undici";
 
-describe("TestIO Trigger-from-PR logic", () => {
+describe("TestIO Trigger-from-PR Util", () => {
 
     let commentBody: string;
 
@@ -38,6 +39,10 @@ describe("TestIO Trigger-from-PR logic", () => {
     it('should parse an object from the Github preparation comment', () => {
         const parsedObject = Util.retrievePrepareObjectFromComment(commentBody);
         expect(parsedObject).not.toBeNull();
+    });
+
+    it('should throw when Github preparation comment cannot be matched', () => {
+        expect(() => Util.retrievePrepareObjectFromComment("non matching comment")).toThrowError("Provided comment didn't match");
     });
 
     it('should validate parsed object against schema', () => {
@@ -60,12 +65,15 @@ describe("TestIO Trigger-from-PR logic", () => {
         expect(url).toBe("https://github.com/MyOrg/myrepo/issues/123456/comments#98765432");
     });
 
+    it('should not match any URL in comment', () => {
+        expect(Util.getUrlFromComment("no URL in here")).toBeUndefined();
+    });
+
     it('should convert prepare object into TestIO payload', () => {
         const prepareObject = Util.retrievePrepareObjectFromComment(commentBody);
         const repo = "testio-management";
         const owner = "Staffbase";
         const pr = 666;
-        const commentID = 123456;
         const prTitle = "My awesome feature";
         const testioPayload = Util.convertPrepareObjectToTestIOPayload(prepareObject, repo, owner, pr, prTitle);
         const testName = `[${owner}/${repo}/${pr}]${prTitle}`;
@@ -78,6 +86,26 @@ describe("TestIO Trigger-from-PR logic", () => {
         expect(testioPayload.exploratory_test.features[0].howtofind).toBe(prepareObject.feature.howtofind);
         expect(testioPayload.exploratory_test.features[0].user_stories).toBe(prepareObject.feature.user_stories);
         expect(testioPayload.exploratory_test.instructions).toBe(prepareObject.additionalInstructions);
+    });
+
+    it('should convert prepare object into TestIO payload without additional instructions', () => {
+        const prepareObject = Util.retrievePrepareObjectFromComment(commentBody);
+        delete prepareObject.additionalInstructions;
+        const repo = "testio-management";
+        const owner = "Staffbase";
+        const pr = 666;
+        const prTitle = "My awesome feature";
+        const testioPayload = Util.convertPrepareObjectToTestIOPayload(prepareObject, repo, owner, pr, prTitle);
+        const testName = `[${owner}/${repo}/${pr}]${prTitle}`;
+        expect(testioPayload.exploratory_test.test_title).toBe(testName);
+        expect(testioPayload.exploratory_test.test_environment.title).toBe(testName + "[test environment]");
+        expect(testioPayload.exploratory_test.test_environment.url).toBe(prepareObject.test_environment.url);
+        expect(testioPayload.exploratory_test.test_environment.access).toBe(prepareObject.test_environment.access);
+        expect(testioPayload.exploratory_test.features[0].title).toBe(prepareObject.feature.title);
+        expect(testioPayload.exploratory_test.features[0].description).toBe(prepareObject.feature.description);
+        expect(testioPayload.exploratory_test.features[0].howtofind).toBe(prepareObject.feature.howtofind);
+        expect(testioPayload.exploratory_test.features[0].user_stories).toBe(prepareObject.feature.user_stories);
+        expect(testioPayload.exploratory_test.instructions).toBeNull();
     });
 
     it('should truncate looooooong PR titles and add suffix', () => {
@@ -105,4 +133,47 @@ describe("TestIO Trigger-from-PR logic", () => {
         expect(prepareObject).not.toBeUndefined();
     });
 
+    // https://api.test.io/customer/v2/products/${this.testioProductId}/exploratory_tests
+    const setupWithMockedTestIoAPI = (testioProductId: string) => {
+        // create a MockAgent to intercept request made using undici
+        const agent = new MockAgent({connections: 1});
+        setGlobalDispatcher(agent);
+
+        agent
+            .get("https://api.test.io")
+            .intercept({
+                path: `/customer/v2/products/${testioProductId}/exploratory_tests`,
+                method: "POST"
+            })
+            .reply(404, {error: "dummy error"}, {headers: {'Content-Type': 'application/json'}});
+
+        agent
+            .get("https://api.test.io")
+            .intercept({
+                path: `/customer/v2/products/${testioProductId}/exploratory_tests`,
+                method: "GET"
+            })
+            .reply(200, {foo: "bar"}, {headers: {'Content-Type': 'application/json'}});
+    }
+
+    it("should cover request(..)", async () => {
+        const testioProductId = "333666failingProduct";
+        const testioToken = "MY_TESTIO_MOCK_TOCKEN";
+        setupWithMockedTestIoAPI(testioProductId);
+
+        const endpoint = `https://api.test.io/customer/v2/products/${testioProductId}/exploratory_tests`;
+        await expect(() => Util.request("POST", endpoint, testioToken)).rejects.toThrowError();
+        const fooBar = await Util.request("GET", endpoint, testioToken);
+        expect(fooBar).toStrictEqual({foo: "bar"});
+    });
+
+    it('should handle error messages', () => {
+        const errorFile = "temp/tempError.msg";
+        const errorMessage = "my error";
+        expect(() => Util.prepareErrorMessageAndOptionallyThrow(errorMessage, errorFile)).toThrowError(errorMessage);
+        expect(fs.existsSync(errorFile)).toBe(true);
+        expect(fs.readFileSync(errorFile, 'utf8')).toBe(errorMessage);
+
+        expect(Util.prepareErrorMessageAndOptionallyThrow(errorMessage, errorFile, true)).toStrictEqual(Error(errorMessage));
+    });
 });

@@ -16,6 +16,7 @@
 
 import fs from "fs";
 import Ajv, {ValidateFunction} from "ajv";
+import path from "path";
 
 export class Util {
 
@@ -103,11 +104,20 @@ export class Util {
         }
     }
 
-    public static throwErrorAndPrepareErrorMessage(errorMessage: string, errorMessageFileName: string) {
-        const errorMessageFilePath = `${process.env.TESTIO_SCRIPTS_DIR}/resources/${errorMessageFileName}`;
+    public static prepareErrorMessageAndOptionallyThrow(errorMessage: string, errorMessageFilePath: string, dontThrow: boolean = false) {
+        const errorMessageDir = path.parse(errorMessageFilePath).dir;
+        if (!fs.existsSync(errorMessageDir)) {
+            fs.mkdirSync(errorMessageDir, {recursive: true});
+            console.log("Create path: " + errorMessageDir);
+        }
+
         fs.writeFileSync(errorMessageFilePath, errorMessage);
         console.error(errorMessage);
-        throw new Error(errorMessage);
+        const error = new Error(errorMessage);
+        if (dontThrow) {
+            return error;
+        }
+        throw error;
     }
 
     static getUrlFromComment(comment: string): string | undefined {

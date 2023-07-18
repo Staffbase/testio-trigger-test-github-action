@@ -20,5 +20,7 @@ module.exports = {
   testEnvironment: 'node',
   collectCoverage: true,
   coverageReporters: ["clover", "json", "lcov", "text", "html"],
+  setupFiles: ['./test.setup.ts'],
   // testTimeout: 10 * 1000,
+  restoreMocks: true
 };
