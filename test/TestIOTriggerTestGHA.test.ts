@@ -31,6 +31,12 @@ describe("Trigger TestIO Test GHA", () => {
     const testioProductId = "333666999";
     const testioToken = "MY_TESTIO_DUMMY_TOKEN";
 
+    beforeEach(() => {
+        if (!fs.existsSync(actionRootDir)) {
+            fs.mkdirSync(actionRootDir);
+        }
+    });
+
     const setupWithMockedIssueCreation = (pathUnderRoot?: string) => {
         // create a MockAgent to intercept request made using undici
         const agent = new MockAgent({connections: 1});
