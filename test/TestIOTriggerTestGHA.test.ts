@@ -26,8 +26,8 @@ describe("Trigger TestIO Test GHA", () => {
     const repo = "awesomeRepo";
     const pr = 666;
     const submitCommentID = 9999999999999;
-    const actionRootDir = "testResourcesTemp";
-    const errorFileName = "errorToComment.msg";
+    const actionRootDir = ".";
+    const errorFileName = "temp/errorToComment.msg";
     const testioProductId = "333666999";
     const testioToken = "MY_TESTIO_DUMMY_TOKEN";
 
@@ -35,9 +35,10 @@ describe("Trigger TestIO Test GHA", () => {
         if (!fs.existsSync(actionRootDir)) {
             fs.mkdirSync(actionRootDir);
         }
+        expect(fs.existsSync(actionRootDir)).toBe(true);
     });
 
-    const setupWithMockedIssueCreation = (pathUnderRoot?: string) => {
+    const setupWithMockedIssueCreation = () => {
         // create a MockAgent to intercept request made using undici
         const agent = new MockAgent({connections: 1});
         setGlobalDispatcher(agent);
@@ -51,10 +52,10 @@ describe("Trigger TestIO Test GHA", () => {
             })
             .reply(201);
 
-        return TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir + (pathUnderRoot? pathUnderRoot : ''), errorFileName);
+        return TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir, errorFileName);
     };
 
-    const setupWithMockedCommentRetrieval = (pathUnderRoot: string) => {
+    const setupWithMockedCommentRetrieval = (pathUnderRoot?: string) => {
         // create a MockAgent to intercept request made using undici
         const agent = new MockAgent({connections: 1});
         setGlobalDispatcher(agent);
@@ -115,7 +116,7 @@ describe("Trigger TestIO Test GHA", () => {
         expect(gha.repo).toBe(repo);
         expect(gha.pr).toBe(pr);
         expect(gha.actionRootDir).toBe(actionRootDir);
-        expect(gha.errorFile).toBe(actionRootDir + "/resources/" + errorFileName);
+        expect(gha.errorFile).toBe(actionRootDir + "/" + errorFileName);
         expect(gha.testioProductId).toBeUndefined();
         expect(gha.testioToken).toBeUndefined();
 
@@ -125,7 +126,7 @@ describe("Trigger TestIO Test GHA", () => {
         expect(gha.repo).toBeUndefined();
         expect(gha.pr).toBeUndefined();
         expect(gha.actionRootDir).toBe(actionRootDir);
-        expect(gha.errorFile).toBe(actionRootDir + "/resources/" + errorFileName);
+        expect(gha.errorFile).toBe(actionRootDir + "/" + errorFileName);
         expect(gha.testioProductId).toBe(testioProductId);
         expect(gha.testioToken).toBe(testioToken);
     });
@@ -144,7 +145,7 @@ describe("Trigger TestIO Test GHA", () => {
     });
 
     it("should create comment", async () => {
-        const gha = setupWithMockedIssueCreation("/..");
+        const gha = setupWithMockedIssueCreation();
         const commentPrepareTemplateFile = "exploratory_test_comment_prepare_template.md";
         const commentPrepareJsonFile = "exploratory_test_comment_prepare.json";
         const createCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#987654321`;
@@ -164,7 +165,7 @@ describe("Trigger TestIO Test GHA", () => {
     });
 
     it("should retrieve prepare object from a retrieved comment of a PR after editing", async () => {
-        const gha = setupWithMockedCommentRetrieval("/..");
+        const gha = setupWithMockedCommentRetrieval();
         const submitCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#${submitCommentID}`;
         const retrievedComment = await gha.retrieveCommentContent(submitCommentID, submitCommentUrl);
         const prepareObject: any = gha.retrieveValidPrepareObjectFromComment(retrievedComment);
@@ -191,15 +192,14 @@ describe("Trigger TestIO Test GHA", () => {
 
     it("should create TestIO payload and persist it in a file", async () => {
         const retrievedComment: string = fs.readFileSync("testResources/expected-prepare-comment.md", 'utf8');
-        let gha = TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir + "/..", errorFileName);
+        let gha = TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir, errorFileName);
         const prepareObject: any = gha.retrieveValidPrepareObjectFromComment(retrievedComment);
         const prTitle = "test: this is my test PR title";
 
         // we need to re-instantiate in order to change the action root dir
         gha.createAndPersistTestIoPayload(prepareObject, prTitle);
 
-        const payloadFile = "testResourcesTemp/resources/testio_payload.json";
-        const storedPayload = JSON.stringify(JSON.parse(fs.readFileSync(payloadFile, 'utf8')), null, 2);
+        const storedPayload = JSON.stringify(JSON.parse(fs.readFileSync(TestIOTriggerTestGHA.persistedPayloadFile, 'utf8')), null, 2);
         const expectedPayload = fs.readFileSync("testResources/expected-payload.json", 'utf8');
         expect(storedPayload).toBe(expectedPayload);
     });

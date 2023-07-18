@@ -20,10 +20,11 @@ import * as github from "@actions/github";
 import * as core from "@actions/core";
 import {Util} from "./Util";
 import betterAjvErrors from "better-ajv-errors";
+import * as path from "path";
 
 export class TestIOTriggerTestGHA {
 
-    private static readonly persistedPayloadFile = 'resources/testio_payload.json';
+    public static readonly persistedPayloadFile = 'temp/testio_payload.json';
 
     private readonly _githubToken?: string;
     private readonly _owner?: string;
@@ -85,7 +86,7 @@ export class TestIOTriggerTestGHA {
     }
 
     public get errorFile() {
-        return `${this.actionRootDir}/resources/${this._errorFile}`;
+        return `${this.actionRootDir}/${this._errorFile}`;
     }
 
     public get testioProductId() {
@@ -220,6 +221,10 @@ export class TestIOTriggerTestGHA {
         console.log("Converted payload:");
         console.log(testIOPayload);
         const payloadFile = `${this.actionRootDir}/${TestIOTriggerTestGHA.persistedPayloadFile}`;
+        const payloadDir = path.parse(payloadFile).dir;
+        if (!fs.existsSync(payloadDir)) {
+            fs.mkdirSync(payloadDir, {recursive: true});
+        }
         fs.writeFileSync(payloadFile, JSON.stringify(testIOPayload));
         return testIOPayload;
     }
