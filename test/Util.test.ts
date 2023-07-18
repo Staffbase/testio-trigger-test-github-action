@@ -17,6 +17,7 @@
 import {Util} from "../src/Util";
 import fs from "fs";
 import betterAjvErrors from 'better-ajv-errors';
+import {MockAgent, setGlobalDispatcher} from "undici";
 
 describe("TestIO Trigger-from-PR Util", () => {
 
@@ -105,4 +106,37 @@ describe("TestIO Trigger-from-PR Util", () => {
         expect(prepareObject).not.toBeUndefined();
     });
 
+    // https://api.test.io/customer/v2/products/${this.testioProductId}/exploratory_tests
+    const setupWithMockedTestIoAPI = (testioProductId: string) => {
+        // create a MockAgent to intercept request made using undici
+        const agent = new MockAgent({connections: 1});
+        setGlobalDispatcher(agent);
+
+        agent
+            .get("https://api.test.io")
+            .intercept({
+                path: `/customer/v2/products/${testioProductId}/exploratory_tests`,
+                method: "POST"
+            })
+            .reply(404, {error: "dummy error"}, {headers: {'Content-Type': 'application/json'}});
+
+        agent
+            .get("https://api.test.io")
+            .intercept({
+                path: `/customer/v2/products/${testioProductId}/exploratory_tests`,
+                method: "GET"
+            })
+            .reply(200, {foo: "bar"}, {headers: {'Content-Type': 'application/json'}});
+    }
+
+    it("should cover request(..)", async () => {
+        const testioProductId = "333666failingProduct";
+        const testioToken = "MY_TESTIO_MOCK_TOCKEN";
+        setupWithMockedTestIoAPI(testioProductId);
+
+        const endpoint = `https://api.test.io/customer/v2/products/${testioProductId}/exploratory_tests`;
+        await expect(() => Util.request("POST", endpoint, testioToken)).rejects.toThrowError();
+        const fooBar = await Util.request("GET", endpoint, testioToken);
+        expect(fooBar).toStrictEqual({foo: "bar"});
+    });
 });

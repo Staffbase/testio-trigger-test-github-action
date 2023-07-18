@@ -30,7 +30,7 @@ export class TestIOTriggerTestGHA {
     private readonly _repo?: string;
     private readonly _pr?: number;
     private readonly _actionRootDir: string;
-    private readonly _errorFileName: string;
+    private readonly _errorFile: string;
     private readonly _testioProductId?: string;
     private readonly _testioToken?: string;
 
@@ -41,7 +41,7 @@ export class TestIOTriggerTestGHA {
         this._pr = pr;
         this._actionRootDir = actionRootDir;
         this._owner = owner;
-        this._errorFileName = errorFileName;
+        this._errorFile = errorFileName;
         this._testioProductId = testioProductId;
         this._testioToken = testioToken;
     }
@@ -84,8 +84,8 @@ export class TestIOTriggerTestGHA {
         return this._actionRootDir;
     }
 
-    public get errorFileName() {
-        return this._errorFileName;
+    public get errorFile() {
+        return `${this.actionRootDir}/resources/${this._errorFile}`;
     }
 
     public get testioProductId() {
@@ -99,8 +99,8 @@ export class TestIOTriggerTestGHA {
     public async addPrepareComment(commentPrepareTemplateFileName: string, commentPrepareJsonFileName: string, createCommentUrl: string): Promise<string> {
         if (!(this.githubToken && this.repo && this.owner && this.pr)) {
             const errorMessage = "Github properties are not configured";
-            Util.throwErrorAndPrepareErrorMessage(errorMessage, this.errorFileName);
-            return Promise.reject(errorMessage);
+            const error = Util.prepareErrorMessageAndOptionallyThrow(errorMessage, this.errorFile, true);
+            return Promise.reject(error);
         }
 
         const commentPrepareTemplateFile = `${this._actionRootDir}/resources/${commentPrepareTemplateFileName}`;
@@ -129,8 +129,8 @@ export class TestIOTriggerTestGHA {
     public async retrieveCommentContent(submitCommentID: number, submitCommentUrl: string): Promise<string> {
         if (!(this.githubToken && this.repo && this.owner && this.pr)) {
             const errorMessage = "Github properties are not configured";
-            Util.throwErrorAndPrepareErrorMessage(errorMessage, this.errorFileName);
-            return Promise.reject(errorMessage);
+            const error = Util.prepareErrorMessageAndOptionallyThrow(errorMessage, this.errorFile, true);
+            return Promise.reject(error);
         }
 
         const octokit = new Octokit({
@@ -145,7 +145,7 @@ export class TestIOTriggerTestGHA {
         core.setOutput("testio-submit-comment-id", submitCommentID);
 
         const commentContents = `${retrievedComment.data.body}`;
-        if (!commentContents) Util.throwErrorAndPrepareErrorMessage(`Comment ${submitCommentUrl} seems to be empty`, this.errorFileName);
+        if (!commentContents) Util.prepareErrorMessageAndOptionallyThrow(`Comment ${submitCommentUrl} seems to be empty`, this.errorFile);
         return commentContents;
     }
 
@@ -155,20 +155,20 @@ export class TestIOTriggerTestGHA {
             preparation = Util.retrievePrepareObjectFromComment(retrievedComment);
         } catch (error) {
             if (error instanceof Error) {
-                Util.throwErrorAndPrepareErrorMessage(error.message, this.errorFileName);
+                Util.prepareErrorMessageAndOptionallyThrow(error.message, this.errorFile);
             }
-            Util.throwErrorAndPrepareErrorMessage(String(error), this.errorFileName);
+            Util.prepareErrorMessageAndOptionallyThrow(String(error), this.errorFile);
         }
 
-        const prepareTestSchemaFile = `${this.actionRootDir}/resources/exploratory_test_comment_prepare_schema.json`;
+        const prepareTestSchemaFile = `${this.actionRootDir}/../resources/exploratory_test_comment_prepare_schema.json`;
         const {valid, validation} = Util.validateObjectAgainstSchema(preparation, prepareTestSchemaFile);
         if (!valid) {
             if (validation.errors) {
                 const output = betterAjvErrors(prepareTestSchemaFile, preparation, validation.errors);
                 console.log(output);
-                Util.throwErrorAndPrepareErrorMessage(`Provided json is not conform to schema: ${output}`, this.errorFileName);
+                Util.prepareErrorMessageAndOptionallyThrow(`Provided json is not conform to schema: ${output}`, this.errorFile);
             }
-            Util.throwErrorAndPrepareErrorMessage("Provided json is not conform to schema", this.errorFileName);
+            Util.prepareErrorMessageAndOptionallyThrow("Provided json is not conform to schema", this.errorFile);
         }
 
         return preparation;
@@ -177,8 +177,8 @@ export class TestIOTriggerTestGHA {
     public async retrievePrTitle(): Promise<string> {
         if (!(this.githubToken && this.repo && this.owner && this.pr)) {
             const errorMessage = "Github properties are not configured";
-            Util.throwErrorAndPrepareErrorMessage(errorMessage, this.errorFileName);
-            return Promise.reject(errorMessage);
+            const error = Util.prepareErrorMessageAndOptionallyThrow(errorMessage, this.errorFile, true);
+            return Promise.reject(error);
         }
 
         const octokit = new Octokit({
@@ -197,7 +197,8 @@ export class TestIOTriggerTestGHA {
         if (!prTitle) {
             console.log("The pull request received:");
             console.log(JSON.stringify(pullRequest, null, 2));
-            Util.throwErrorAndPrepareErrorMessage("Could not retrieve title of the PR", this.errorFileName);
+            const error = Util.prepareErrorMessageAndOptionallyThrow("Could not retrieve title of the PR", this.errorFile, true);
+            return Promise.reject(error);
         }
         return prTitle;
     }
@@ -205,8 +206,8 @@ export class TestIOTriggerTestGHA {
     public createAndPersistTestIoPayload(prepareObject: any, prTitle: string): any {
         if (!(this.repo && this.owner && this.pr)) {
             const errorMessage = "Github properties are not configured";
-            Util.throwErrorAndPrepareErrorMessage(errorMessage, this.errorFileName);
-            return Promise.reject(errorMessage);
+            const error = Util.prepareErrorMessageAndOptionallyThrow(errorMessage, this.errorFile, true);
+            return Promise.reject(error);
         }
 
         const testIOPayload = Util.convertPrepareObjectToTestIOPayload(
@@ -226,8 +227,8 @@ export class TestIOTriggerTestGHA {
     public async triggerTestIoTest(): Promise<any> {
         if (!(this.testioToken && this.testioProductId)) {
             const errorMessage = "TestIO properties are not configured";
-            Util.throwErrorAndPrepareErrorMessage(errorMessage, this.errorFileName);
-            return Promise.reject(errorMessage);
+            const error = Util.prepareErrorMessageAndOptionallyThrow(errorMessage, this.errorFile, true);
+            return Promise.reject(error);
         }
 
         const payloadFile = `${this.actionRootDir}/${TestIOTriggerTestGHA.persistedPayloadFile}`;
