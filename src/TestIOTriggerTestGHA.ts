@@ -224,6 +224,7 @@ export class TestIOTriggerTestGHA {
         const payloadDir = path.parse(payloadFile).dir;
         if (!fs.existsSync(payloadDir)) {
             fs.mkdirSync(payloadDir, {recursive: true});
+            console.log("Create path: " + payloadDir);
         }
         fs.writeFileSync(payloadFile, JSON.stringify(testIOPayload));
         return testIOPayload;

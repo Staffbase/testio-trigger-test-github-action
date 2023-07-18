@@ -16,6 +16,7 @@
 
 import fs from "fs";
 import Ajv, {ValidateFunction} from "ajv";
+import path from "path";
 
 export class Util {
 
@@ -104,6 +105,12 @@ export class Util {
     }
 
     public static prepareErrorMessageAndOptionallyThrow(errorMessage: string, errorMessageFilePath: string, dontThrow: boolean = false) {
+        const errorMessageDir = path.parse(errorMessageFilePath).dir;
+        if (!fs.existsSync(errorMessageDir)) {
+            fs.mkdirSync(errorMessageDir, {recursive: true});
+            console.log("Create path: " + errorMessageDir);
+        }
+
         fs.writeFileSync(errorMessageFilePath, errorMessage);
         console.error(errorMessage);
         const error = new Error(errorMessage);
