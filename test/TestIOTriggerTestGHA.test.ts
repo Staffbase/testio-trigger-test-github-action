@@ -48,7 +48,7 @@ describe("Trigger TestIO Test GHA", () => {
         return TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir + (pathUnderRoot? pathUnderRoot : ''), errorFileName);
     };
 
-    const setupWithMockedCommentRetrieval = () => {
+    const setupWithMockedCommentRetrieval = (pathUnderRoot: string) => {
         // create a MockAgent to intercept request made using undici
         const agent = new MockAgent({connections: 1});
         setGlobalDispatcher(agent);
@@ -63,10 +63,10 @@ describe("Trigger TestIO Test GHA", () => {
             })
             .reply(200, {body: retrievedComment}, {headers: {'Content-Type': 'application/json'}});
 
-        return TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir, errorFileName);
+        return TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir + (pathUnderRoot? pathUnderRoot : ''), errorFileName);
     };
 
-    const setupWithMockedPrTitleRetrieval = (expectedPrTitle: string) => {
+    const setupWithMockedPrTitleRetrieval = (expectedPrTitle: undefined | string) => {
         // create a MockAgent to intercept request made using undici
         const agent = new MockAgent({connections: 1});
         setGlobalDispatcher(agent);
@@ -149,7 +149,7 @@ describe("Trigger TestIO Test GHA", () => {
     });
 
     it("should retrieve content of a PR comment after editing", async () => {
-        const gha = setupWithMockedCommentRetrieval();
+        const gha = setupWithMockedCommentRetrieval("/..");
         const submitCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#${submitCommentID}`;
         const retrievedComment = await gha.retrieveCommentContent(submitCommentID, submitCommentUrl);
 
@@ -158,7 +158,7 @@ describe("Trigger TestIO Test GHA", () => {
     });
 
     it("should retrieve prepare object from a retrieved comment of a PR after editing", async () => {
-        const gha = setupWithMockedCommentRetrieval();
+        const gha = setupWithMockedCommentRetrieval("/..");
         const submitCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#${submitCommentID}`;
         const retrievedComment = await gha.retrieveCommentContent(submitCommentID, submitCommentUrl);
         const prepareObject: any = gha.retrieveValidPrepareObjectFromComment(retrievedComment);
@@ -173,21 +173,23 @@ describe("Trigger TestIO Test GHA", () => {
     });
 
     it("should retrieve PR title", async () => {
-        const expectedPrTitle = "test: this is my test PR title";
-        const gha = setupWithMockedPrTitleRetrieval(expectedPrTitle);
+        let expectedPrTitle: undefined | string = "test: this is my test PR title";
+        let gha = setupWithMockedPrTitleRetrieval(expectedPrTitle);
         const prTitle: string = await gha.retrievePrTitle();
-
         expect(prTitle).toBe(expectedPrTitle);
+
+        expectedPrTitle = undefined;
+        gha = setupWithMockedPrTitleRetrieval(expectedPrTitle);
+        await expect(gha.retrievePrTitle()).rejects.toEqual(new Error("Could not retrieve title of the PR"));
     });
 
     it("should create TestIO payload and persist it in a file", async () => {
         const retrievedComment: string = fs.readFileSync("testResources/expected-prepare-comment.md", 'utf8');
-        let gha = TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir, errorFileName);
+        let gha = TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir + "/..", errorFileName);
         const prepareObject: any = gha.retrieveValidPrepareObjectFromComment(retrievedComment);
         const prTitle = "test: this is my test PR title";
 
         // we need to re-instantiate in order to change the action root dir
-        // gha = TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir, errorFileName);
         gha.createAndPersistTestIoPayload(prepareObject, prTitle);
 
         const payloadFile = "testResourcesTemp/resources/testio_payload.json";

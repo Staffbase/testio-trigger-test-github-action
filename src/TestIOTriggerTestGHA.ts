@@ -160,7 +160,7 @@ export class TestIOTriggerTestGHA {
             Util.prepareErrorMessageAndOptionallyThrow(String(error), this.errorFile);
         }
 
-        const prepareTestSchemaFile = `${this.actionRootDir}/../resources/exploratory_test_comment_prepare_schema.json`;
+        const prepareTestSchemaFile = `${this.actionRootDir}/resources/exploratory_test_comment_prepare_schema.json`;
         const {valid, validation} = Util.validateObjectAgainstSchema(preparation, prepareTestSchemaFile);
         if (!valid) {
             if (validation.errors) {
