@@ -38,7 +38,7 @@ describe("Trigger TestIO Test GHA", () => {
         expect(fs.existsSync(actionRootDir)).toBe(true);
     });
 
-    const setupWithMockedIssueCreation = () => {
+    const setupWithMockedCommentCreation = () => {
         // create a MockAgent to intercept request made using undici
         const agent = new MockAgent({connections: 1});
         setGlobalDispatcher(agent);
@@ -134,7 +134,7 @@ describe("Trigger TestIO Test GHA", () => {
     it("should check wrong instantiation of GHA", async () => {
         // instantiate for TestIO but call a function specific to Github
         let gha = TestIOTriggerTestGHA.createForTestIO("dummy", "dummy", actionRootDir, errorFileName);
-        await expect(gha.addPrepareComment("dummy", "dummy", "dummy")).rejects.toEqual(new Error("Github properties are not configured"));
+        await expect(gha.addPrepareComment("dummy")).rejects.toEqual(new Error("Github properties are not configured"));
         await expect(gha.retrieveCommentContent(-1, "dummy")).rejects.toEqual(new Error("Github properties are not configured"));
         await expect(gha.retrievePrTitle()).rejects.toEqual(new Error("Github properties are not configured"));
         await expect(gha.createAndPersistTestIoPayload({}, "dummy")).rejects.toEqual(new Error("Github properties are not configured"));
@@ -144,16 +144,18 @@ describe("Trigger TestIO Test GHA", () => {
         await expect(gha.triggerTestIoTest()).rejects.toEqual(new Error("TestIO properties are not configured"));
     });
 
-    it("should create comment", async () => {
-        const gha = setupWithMockedIssueCreation();
-        const commentPrepareTemplateFile = "exploratory_test_comment_prepare_template.md";
-        const commentPrepareJsonFile = "exploratory_test_comment_prepare.json";
-        const createCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#987654321`;
-        const createdComment = await gha.addPrepareComment(commentPrepareTemplateFile, commentPrepareJsonFile, createCommentUrl);
+    describe("Comment Creation for different contexts", () => {
 
-        const expectedComment = fs.readFileSync("testResources/expected-prepare-comment.md", 'utf8');
-        expect(createdComment).toBe(expectedComment);
+        it("should create comment for default context", async () => {
+            const gha = setupWithMockedCommentCreation();
+            const createCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#987654321`;
+            const createdComment = await gha.addPrepareComment(createCommentUrl);
+
+            const expectedComment = fs.readFileSync("testResources/expected-prepare-comment.md", 'utf8');
+            expect(createdComment).toBe(expectedComment);
+        });
     });
+
 
     it("should retrieve content of a PR comment after editing", async () => {
         const gha = setupWithMockedCommentRetrieval("/..");

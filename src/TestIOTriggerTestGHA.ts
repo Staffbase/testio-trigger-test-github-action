@@ -16,7 +16,6 @@
 
 import fs from "fs";
 import {Octokit} from "@octokit/rest";
-import * as github from "@actions/github";
 import * as core from "@actions/core";
 import {Util} from "./Util";
 import betterAjvErrors from "better-ajv-errors";
@@ -25,31 +24,33 @@ import * as path from "path";
 export class TestIOTriggerTestGHA {
 
     public static readonly persistedPayloadFile = 'temp/testio_payload.json';
+    private static readonly commentPrepareTemplateFile = "exploratory_test_comment_prepare_template.md";
+    private static readonly commentPrepareJsonFile = "exploratory_test_comment_prepare.json";
 
-    private readonly _githubToken?: string;
-    private readonly _owner?: string;
-    private readonly _repo?: string;
-    private readonly _pr?: number;
+    private _githubToken?: string;
+    private _owner?: string;
+    private _repo?: string;
+    private _pr?: number;
     private readonly _actionRootDir: string;
     private readonly _errorFile: string;
-    private readonly _testioProductId?: string;
-    private readonly _testioToken?: string;
+    private _testioProductId?: string;
+    private _testioToken?: string;
 
     // instantiation via constructor only allowed from within this class
-    private constructor(githubToken: undefined | string, owner: undefined | string, repo: undefined | string, pr: undefined | number, actionRootDir: string, errorFileName: string, testioProductId?: string, testioToken?: string) {
-        this._githubToken = githubToken;
-        this._repo = repo;
-        this._pr = pr;
+    private constructor(actionRootDir: string, errorFileName: string) {
         this._actionRootDir = actionRootDir;
-        this._owner = owner;
         this._errorFile = errorFileName;
-        this._testioProductId = testioProductId;
-        this._testioToken = testioToken;
     }
 
-    public static createForGithub(githubToken: string, owner: string, repo: string, pr: number, actionRootDir: string, errorFileName: string) {
-        return new TestIOTriggerTestGHA(githubToken, owner, repo, pr, actionRootDir, errorFileName);
+    public static createForGithub(githubToken: string, owner: string, repo: string, pr: number, actionRootDir: string, errorFileName: string): TestIOTriggerTestGHA {
+        const gha = new TestIOTriggerTestGHA(actionRootDir, errorFileName);
+        gha._githubToken = githubToken;
+        gha._owner = owner;
+        gha._repo = repo;
+        gha._pr = pr;
+        return gha;
     }
+
 
     /**
      * This factory method creates an instance of this class and leaves those properties related to Github uninstantiated.
@@ -62,7 +63,10 @@ export class TestIOTriggerTestGHA {
      * @param errorFileName
      */
     public static createForTestIO(testioProductId: string, testioToken: string, actionRootDir: string, errorFileName: string) {
-        return new TestIOTriggerTestGHA(undefined, undefined, undefined, undefined, actionRootDir, errorFileName, testioProductId, testioToken);
+        const gha = new TestIOTriggerTestGHA(actionRootDir, errorFileName);
+        gha._testioProductId = testioProductId;
+        gha._testioToken = testioToken;
+        return gha;
     }
 
     public get githubToken() {
@@ -97,17 +101,17 @@ export class TestIOTriggerTestGHA {
         return this._testioToken;
     }
 
-    public async addPrepareComment(commentPrepareTemplateFileName: string, commentPrepareJsonFileName: string, createCommentUrl: string): Promise<string> {
+    public async addPrepareComment(createCommentUrl: string): Promise<string> {
         if (!(this.githubToken && this.repo && this.owner && this.pr)) {
             const errorMessage = "Github properties are not configured";
             const error = Util.prepareErrorMessageAndOptionallyThrow(errorMessage, this.errorFile, true);
             return Promise.reject(error);
         }
 
-        const commentPrepareTemplateFile = `${this._actionRootDir}/resources/${commentPrepareTemplateFileName}`;
+        const commentPrepareTemplateFile = `${this.actionRootDir}/resources/${TestIOTriggerTestGHA.commentPrepareTemplateFile}`;
         const commentTemplate = fs.readFileSync(commentPrepareTemplateFile, 'utf8');
 
-        const commentPrepareJsonFile = `${this._actionRootDir}/resources/${commentPrepareJsonFileName}`;
+        const commentPrepareJsonFile = `${this.actionRootDir}/resources/${TestIOTriggerTestGHA.commentPrepareJsonFile}`;
         const jsonString = fs.readFileSync(commentPrepareJsonFile, 'utf8');
 
         const requiredInformationPlaceholder = "$$REQUIRED_INFORMATION_TEMPLATE$$";

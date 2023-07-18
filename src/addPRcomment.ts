@@ -20,7 +20,7 @@ import {TestIOTriggerTestGHA} from "./TestIOTriggerTestGHA";
 async function addComment() {
     const errorFileName = `${process.env.TESTIO_ERROR_MSG_FILE}`;
 
-    // TODO handle provided context (default, android, ios)
+    // TODO handle provided context (default, android, ios, native (= both android + native)
     const context = process.argv[2]
     console.log("Given context: " + context);
 
@@ -32,10 +32,8 @@ async function addComment() {
         `${process.env.TESTIO_SCRIPTS_DIR}`,
         errorFileName
     );
-    const commentPrepareTemplateFile = "exploratory_test_comment_prepare_template.md";
-    const commentPrepareJsonFile = "exploratory_test_comment_prepare.json";
 
-    await gha.addPrepareComment(commentPrepareTemplateFile, commentPrepareJsonFile, `${process.env.TESTIO_CREATE_COMMENT_URL}`);
+    await gha.addPrepareComment(`${process.env.TESTIO_CREATE_COMMENT_URL}`);
 }
 
 addComment().then();
