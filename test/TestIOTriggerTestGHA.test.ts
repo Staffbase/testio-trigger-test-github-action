@@ -55,12 +55,12 @@ describe("Trigger TestIO Test GHA", () => {
         return TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir, errorFileName);
     };
 
-    const setupWithMockedCommentRetrieval = () => {
+    const setupWithMockedCommentRetrieval = (expectedPrepareCommentFile: string = "expected-default-prepare-comment.md") => {
         // create a MockAgent to intercept request made using undici
         const agent = new MockAgent({connections: 1});
         setGlobalDispatcher(agent);
 
-        const retrievedComment: string = fs.readFileSync("testResources/expected-default-prepare-comment.md", 'utf8');
+        const retrievedComment: string = fs.readFileSync(`testResources/${expectedPrepareCommentFile}`, 'utf8');
         // https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28#get-an-issue-comment
         agent
             .get("https://api.github.com")
@@ -191,6 +191,31 @@ describe("Trigger TestIO Test GHA", () => {
             expect(createdComment).toBe(expectedComment);
         });
 
+        it("should retrieve content of a PR comment after editing", async () => {
+            const gha = setupWithMockedCommentRetrieval("expected-android-prepare-comment.md");
+            const submitCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#${submitCommentID}`;
+            const retrievedComment = await gha.retrieveCommentContent(submitCommentID, submitCommentUrl);
+
+            const expectedComment = fs.readFileSync("testResources/expected-android-prepare-comment.md", 'utf8');
+            expect(retrievedComment).toBe(expectedComment);
+        });
+
+        it("should retrieve prepare object from a retrieved comment of a PR after editing", async () => {
+            const gha = setupWithMockedCommentRetrieval("expected-android-prepare-comment.md");
+            const submitCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#${submitCommentID}`;
+            const retrievedComment = await gha.retrieveCommentContent(submitCommentID, submitCommentUrl);
+            const prepareObject: any = gha.retrieveValidPrepareObjectFromComment(retrievedComment);
+
+            expect(prepareObject.test_environment.url).toBe("your URL of preview deployment or built bundle from bot-the-builder");
+            expect(prepareObject.test_environment.access).toBe("provide credentials for the tester to access the environment");
+            expect(prepareObject.feature.title).toBe("The name of the feature to be tested");
+            expect(prepareObject.feature.description).toBe("A short description of the feature to be tested");
+            expect(prepareObject.feature.howtofind).toBe("Describe where to find the feature to be tested");
+            expect(prepareObject.feature.user_stories[0]).toBe("Add 1 or more user stories here which you want the tester to verify");
+            expect(prepareObject.additionalInstructions).toBe("(optional, remove it if not needed)");
+            expect(prepareObject.native.android.min).toBe(8);
+            expect(prepareObject.native.android.max).toBe(10);
+        });
     });
 
     it("should retrieve PR title", async () => {

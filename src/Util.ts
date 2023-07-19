@@ -35,7 +35,8 @@ export class Util {
     public static validateObjectAgainstSchema(parsedObject: any, schemaFile: string): { valid: boolean; validation: ValidateFunction<unknown> } {
         const prepareTestSchema = JSON.parse(fs.readFileSync(schemaFile, 'utf8'));
         const ajv = new Ajv({
-            strictTuples: false
+            strict: true,
+            strictSchema: true
         });
         const validation = ajv.compile(prepareTestSchema);
         const valid = validation(parsedObject);

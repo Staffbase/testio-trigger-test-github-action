@@ -30,13 +30,8 @@
         },
         "user_stories": {
           "type": "array",
-          "items": [
-            {
-              "type": "string"
-            }
-          ],
-          "minItems": 1,
-          "additionalItems": true
+          "items": { "type": "string" },
+          "minItems": 1
         }
       },
       "required": [
@@ -50,6 +45,7 @@
       "type": "string"
     }
   },
+  "additionalProperties": false,
   "required": [
     "test_environment",
     "feature"
