@@ -35,6 +35,7 @@ async function createPayload() {
     );
     const commentContents = await gha.retrieveCommentContent(submitCommentID, submitCommentUrl);
 
+    // TODO move this part into gha.retrieveCommentConent
     const triggerCommentUrl = Util.getUrlFromComment(commentContents);
     if (triggerCommentUrl != undefined) {
         core.setOutput("testio-create-comment-url", triggerCommentUrl);
