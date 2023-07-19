@@ -3,8 +3,7 @@ name: Trigger Test on TestIO
 author: Staffbase GmbH
 
 description: |-
-  Triggers a test on the crowd-testing platform TestIO from a pull request by adding and editing specific comments.
-  If you want to do that you need to be a customer from TestIO.
+  Initiate test on crowd-testing platform TestIO from a pull request with specific comments. Requires TestIO customer account.
 
 inputs:
   testio-slug:

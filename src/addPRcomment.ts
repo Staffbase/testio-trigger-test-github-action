@@ -21,7 +21,7 @@ async function addComment() {
     const errorFileName = `${process.env.TESTIO_ERROR_MSG_FILE}`;
 
     // TODO handle provided context (default, android, ios, native (= both android + native)
-    const context = process.argv[2]
+    const context = `${process.argv[2]}`;
     console.log("Given context: " + context);
 
     const gha = TestIOTriggerTestGHA.createForGithub(
@@ -33,7 +33,7 @@ async function addComment() {
         errorFileName
     );
 
-    await gha.addPrepareComment(`${process.env.TESTIO_CREATE_COMMENT_URL}`);
+    await gha.addPrepareComment(`${process.env.TESTIO_CREATE_COMMENT_URL}`, context);
 }
 
 addComment().then();

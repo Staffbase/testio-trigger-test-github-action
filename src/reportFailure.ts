@@ -20,14 +20,14 @@ import {Octokit} from "@octokit/rest";
 
 async function reportFailure() {
     const errorFileName = `${process.env.TESTIO_ERROR_MSG_FILE}`;
-    const errorMessageFilePath = `${process.env.TESTIO_SCRIPTS_DIR}/resources/${errorFileName}`;
+    const errorMessageFilePath = `${process.env.TESTIO_SCRIPTS_DIR}/${errorFileName}`;
     const createCommentUrl = `${process.env.TESTIO_CREATE_COMMENT_URL}`;
 
     let commentErrorMessage = "";
 
     if (fs.existsSync(errorMessageFilePath)) {
         const errorMessageToReport = fs.readFileSync(errorMessageFilePath, 'utf8');
-        commentErrorMessage = "🚨 Failure 🚨 :bangbang: ⛔️ Please check the following error  ⛔️ :bangbang: \n\n```" + errorMessageToReport + "```";
+        commentErrorMessage = "🚨 Failure 🚨 :bangbang: ⛔️ Please check the following error  ⛔️ :bangbang: \n\n```\n" + errorMessageToReport + "\n```";
     } else {
         commentErrorMessage = "🚨 Failed to trigger a test on TestIO 🚨 Please revise your steps";
     }

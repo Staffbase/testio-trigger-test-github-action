@@ -25,7 +25,8 @@ export class TestIOTriggerTestGHA {
 
     public static readonly persistedPayloadFile = 'temp/testio_payload.json';
     private static readonly commentPrepareTemplateFile = "exploratory_test_comment_prepare_template.md";
-    private static readonly commentPrepareJsonFile = "exploratory_test_comment_prepare.json";
+    private static readonly commentPrepareDefaultJsonFile = "exploratory_test_comment_prepare_default.json";
+    private static readonly commentPrepareAndroidJsonFile = "exploratory_test_comment_prepare_android.json";
 
     private _githubToken?: string;
     private _owner?: string;
@@ -101,7 +102,7 @@ export class TestIOTriggerTestGHA {
         return this._testioToken;
     }
 
-    public async addPrepareComment(createCommentUrl: string): Promise<string> {
+    public async addPrepareComment(createCommentUrl: string, context: string = "default"): Promise<string> {
         if (!(this.githubToken && this.repo && this.owner && this.pr)) {
             const errorMessage = "Github properties are not configured";
             const error = Util.prepareErrorMessageAndOptionallyThrow(errorMessage, this.errorFile, true);
@@ -111,7 +112,20 @@ export class TestIOTriggerTestGHA {
         const commentPrepareTemplateFile = `${this.actionRootDir}/resources/${TestIOTriggerTestGHA.commentPrepareTemplateFile}`;
         const commentTemplate = fs.readFileSync(commentPrepareTemplateFile, 'utf8');
 
-        const commentPrepareJsonFile = `${this.actionRootDir}/resources/${TestIOTriggerTestGHA.commentPrepareJsonFile}`;
+        let contextJsonFile: string;
+        switch (context) {
+            case "android": {
+                contextJsonFile = TestIOTriggerTestGHA.commentPrepareAndroidJsonFile;
+                break;
+            }
+
+            case "default":
+            default: {
+                contextJsonFile = TestIOTriggerTestGHA.commentPrepareDefaultJsonFile;
+            }
+        }
+
+        const commentPrepareJsonFile = `${this.actionRootDir}/resources/${contextJsonFile}`;
         const jsonString = fs.readFileSync(commentPrepareJsonFile, 'utf8');
 
         const requiredInformationPlaceholder = "$$REQUIRED_INFORMATION_TEMPLATE$$";
@@ -170,7 +184,6 @@ export class TestIOTriggerTestGHA {
         if (!valid) {
             if (validation.errors) {
                 const output = betterAjvErrors(prepareTestSchemaFile, preparation, validation.errors);
-                console.log(output);
                 Util.prepareErrorMessageAndOptionallyThrow(`Provided json is not conform to schema: ${output}`, this.errorFile);
             }
             Util.prepareErrorMessageAndOptionallyThrow("Provided json is not conform to schema", this.errorFile);

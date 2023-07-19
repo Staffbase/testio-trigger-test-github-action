@@ -30,13 +30,8 @@
         },
         "user_stories": {
           "type": "array",
-          "items": [
-            {
-              "type": "string"
-            }
-          ],
-          "minItems": 1,
-          "additionalItems": true
+          "items": { "type": "string" },
+          "minItems": 1
         }
       },
       "required": [
@@ -46,10 +41,31 @@
         "user_stories"
       ]
     },
+    "native": {
+      "type": "object",
+      "properties": {
+        "android": {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "integer",
+              "minimum": 8
+            },
+            "max": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "min"
+          ]
+        }
+      }
+    },
     "additionalInstructions": {
       "type": "string"
     }
   },
+  "additionalProperties": false,
   "required": [
     "test_environment",
     "feature"
