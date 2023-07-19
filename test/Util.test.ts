@@ -108,6 +108,61 @@ describe("TestIO Trigger-from-PR Util", () => {
         expect(testioPayload.exploratory_test.instructions).toBeNull();
     });
 
+    it('should convert Android prepare object into TestIO payload', () => {
+        const retrievedComment: string = fs.readFileSync("testResources/expected-android-prepare-comment.md", 'utf8');
+        const prepareObject = Util.retrievePrepareObjectFromComment(retrievedComment);
+        const repo = "testio-management";
+        const owner = "Staffbase";
+        const pr = 666;
+        const prTitle = "My awesome feature";
+        let testioPayload = Util.convertPrepareObjectToTestIOPayload(prepareObject, repo, owner, pr, prTitle);
+        expect(testioPayload.exploratory_test.requirements[0].category.name).toBe("Smartphones");
+        expect(testioPayload.exploratory_test.requirements[0].category.id).toBe(2);
+        expect(testioPayload.exploratory_test.requirements[0].operating_system.name).toBe("Android");
+        expect(testioPayload.exploratory_test.requirements[0].operating_system.id).toBe(1);
+        expect(testioPayload.exploratory_test.requirements[0].min_operating_system_version.name).toBe("8");
+        expect(testioPayload.exploratory_test.requirements[0].min_operating_system_version.id).toBe(266);
+        expect(testioPayload.exploratory_test.requirements[0].max_operating_system_version.name).toBe("10");
+        expect(testioPayload.exploratory_test.requirements[0].max_operating_system_version.id).toBe(380);
+
+        delete prepareObject.native.android.max;
+        testioPayload = Util.convertPrepareObjectToTestIOPayload(prepareObject, repo, owner, pr, prTitle);
+        expect(testioPayload.exploratory_test.requirements[0].category.name).toBe("Smartphones");
+        expect(testioPayload.exploratory_test.requirements[0].category.id).toBe(2);
+        expect(testioPayload.exploratory_test.requirements[0].operating_system.name).toBe("Android");
+        expect(testioPayload.exploratory_test.requirements[0].operating_system.id).toBe(1);
+        expect(testioPayload.exploratory_test.requirements[0].min_operating_system_version.name).toBe("8");
+        expect(testioPayload.exploratory_test.requirements[0].min_operating_system_version.id).toBe(266);
+        expect(testioPayload.exploratory_test.requirements[0].max_operating_system_version).toBeNull();
+    });
+
+    it('should map Android version number to version ID', function () {
+        const versionNumberToExpectedId = new Map<number, number>([
+            [8, 266],
+            [9, 319],
+            [10, 380],
+            [11, 462],
+            [12, 572],
+            [13, 661],
+            [14, 753],
+        ]);
+
+        for (let [versionNumber, expectedVersionId] of versionNumberToExpectedId) {
+            let versionId = Util.getTestIoVersionIdFromVersionNumber("android", versionNumber);
+            expect(versionId).toBe(expectedVersionId);
+        }
+
+        const minVersionId = Util.getTestIoVersionIdFromVersionNumber("android", 4);
+        // when a version number smaller than the minimal version is requested it should return the ID of the minimal version
+        expect(minVersionId).toBe(266);
+
+        const maxVersionId = Util.getTestIoVersionIdFromVersionNumber("android", 20);
+        // when a version number greater than the maximum version is requested it should return the ID of the maximum version
+        expect(maxVersionId).toBe(753);
+
+        expect(Util.getTestIoVersionIdFromVersionNumber("OS doesn't_exist", 20)).toBeUndefined();
+    });
+
     it('should truncate looooooong PR titles and add suffix', () => {
         const maxLength= 80;
         let prTitle = "This is my short title";

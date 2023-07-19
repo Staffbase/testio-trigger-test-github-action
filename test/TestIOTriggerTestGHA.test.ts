@@ -178,7 +178,21 @@ describe("Trigger TestIO Test GHA", () => {
             expect(prepareObject.feature.user_stories[0]).toBe("Add 1 or more user stories here which you want the tester to verify");
             expect(prepareObject.additionalInstructions).toBe("(optional, remove it if not needed)");
         });
+
+        it("should create TestIO payload and persist it in a file", async () => {
+            const retrievedComment: string = fs.readFileSync("testResources/expected-default-prepare-comment.md", 'utf8');
+            let gha = TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir, errorFileName);
+            const prepareObject: any = gha.retrieveValidPrepareObjectFromComment(retrievedComment);
+            const prTitle = "test: this is my test PR title";
+
+            gha.createAndPersistTestIoPayload(prepareObject, prTitle);
+
+            const storedPayload = JSON.stringify(JSON.parse(fs.readFileSync(TestIOTriggerTestGHA.persistedPayloadFile, 'utf8')), null, 2);
+            const expectedPayload = fs.readFileSync("testResources/expected-default-payload.json", 'utf8');
+            expect(storedPayload).toBe(expectedPayload);
+        });
     });
+
 
     describe("[Android context] Comment Creation and Retrieval", () => {
 
@@ -216,6 +230,7 @@ describe("Trigger TestIO Test GHA", () => {
             expect(prepareObject.native.android.min).toBe(8);
             expect(prepareObject.native.android.max).toBe(10);
         });
+
     });
 
     it("should retrieve PR title", async () => {
@@ -227,20 +242,6 @@ describe("Trigger TestIO Test GHA", () => {
         expectedPrTitle = undefined;
         gha = setupWithMockedPrTitleRetrieval(expectedPrTitle);
         await expect(gha.retrievePrTitle()).rejects.toEqual(new Error("Could not retrieve title of the PR"));
-    });
-
-    it("should create TestIO payload and persist it in a file", async () => {
-        const retrievedComment: string = fs.readFileSync("testResources/expected-default-prepare-comment.md", 'utf8');
-        let gha = TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir, errorFileName);
-        const prepareObject: any = gha.retrieveValidPrepareObjectFromComment(retrievedComment);
-        const prTitle = "test: this is my test PR title";
-
-        // we need to re-instantiate in order to change the action root dir
-        gha.createAndPersistTestIoPayload(prepareObject, prTitle);
-
-        const storedPayload = JSON.stringify(JSON.parse(fs.readFileSync(TestIOTriggerTestGHA.persistedPayloadFile, 'utf8')), null, 2);
-        const expectedPayload = fs.readFileSync("testResources/expected-payload.json", 'utf8');
-        expect(storedPayload).toBe(expectedPayload);
     });
 
     it("should trigger a test on TestIO", async () => {

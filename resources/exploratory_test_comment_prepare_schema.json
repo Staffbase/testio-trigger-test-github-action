@@ -54,7 +54,10 @@
             "max": {
               "type": "integer"
             }
-          }
+          },
+          "required": [
+            "min"
+          ]
         }
       }
     },

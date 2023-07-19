@@ -68,6 +68,34 @@ export class Util {
                 testing_type: "rapid"
             }
         };
+
+        if (prepareObject.native?.android) {
+            testioPayload.exploratory_test = {
+                ...testioPayload.exploratory_test, ...{
+                    requirements: [
+                        {
+                            category: {
+                                id: 2,
+                                name: "Smartphones"
+                            },
+                            operating_system: {
+                                id: 1,
+                                name: "Android"
+                            },
+                            min_operating_system_version: {
+                                id: Util.getTestIoVersionIdFromVersionNumber("android", prepareObject.native.android.min),
+                                name: "" + prepareObject.native.android.min
+                            },
+                            max_operating_system_version: (prepareObject.native.android.max ? {
+                                id: Util.getTestIoVersionIdFromVersionNumber("android", prepareObject.native.android.max),
+                                name: "" + prepareObject.native.android.max
+                            } : null)
+                        }
+                    ]
+                }
+            }
+        }
+
         return testioPayload;
     }
 
@@ -144,5 +172,36 @@ export class Util {
         let preparation: any;
         preparation = Util.getJsonObjectFromComment(jsonRegex, comment, 1);
         return preparation;
+    }
+
+    static getTestIoVersionIdFromVersionNumber(operatingSystem: string, versionNumber: number): number | undefined {
+        const operatingSystemToVersionNumberToVersionIDs = new Map<string, Map<number, number>>([
+            ["android", new Map<number, number>([
+                [8, 266],
+                [9, 319],
+                [10, 380],
+                [11, 462],
+                [12, 572],
+                [13, 661],
+                [14, 753],
+            ])]
+        ]);
+
+        const versionNumberToID: Map<number, number> | undefined = operatingSystemToVersionNumberToVersionIDs.get(operatingSystem);
+        if (!versionNumberToID) {
+            console.log(`Operating System not found: ${operatingSystem}`);
+            return undefined;
+        }
+
+        const minVersion: number = Array.from(versionNumberToID.keys()).reduce((a, b) => a < b ? a : b);
+        const maxVersion: number = Array.from(versionNumberToID.keys()).reduce((a, b) => a > b ? a : b);
+        if (versionNumber < minVersion) {
+            versionNumber = minVersion;
+        }
+        if (versionNumber > maxVersion) {
+            versionNumber = maxVersion;
+        }
+
+        return versionNumberToID.get(versionNumber);
     }
 }
