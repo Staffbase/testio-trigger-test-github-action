@@ -27,7 +27,7 @@ async function reportFailure() {
 
     if (fs.existsSync(errorMessageFilePath)) {
         const errorMessageToReport = fs.readFileSync(errorMessageFilePath, 'utf8');
-        commentErrorMessage = "🚨 Failure 🚨 :bangbang: ⛔️ Please check the following error  ⛔️ :bangbang: \n\n```" + errorMessageToReport + "```";
+        commentErrorMessage = "🚨 Failure 🚨 :bangbang: ⛔️ Please check the following error  ⛔️ :bangbang: \n\n```\n" + errorMessageToReport + "\n```";
     } else {
         commentErrorMessage = "🚨 Failed to trigger a test on TestIO 🚨 Please revise your steps";
     }
