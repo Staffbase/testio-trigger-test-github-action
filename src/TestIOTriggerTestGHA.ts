@@ -184,7 +184,6 @@ export class TestIOTriggerTestGHA {
         if (!valid) {
             if (validation.errors) {
                 const output = betterAjvErrors(prepareTestSchemaFile, preparation, validation.errors);
-                console.log(output);
                 Util.prepareErrorMessageAndOptionallyThrow(`Provided json is not conform to schema: ${output}`, this.errorFile);
             }
             Util.prepareErrorMessageAndOptionallyThrow("Provided json is not conform to schema", this.errorFile);
