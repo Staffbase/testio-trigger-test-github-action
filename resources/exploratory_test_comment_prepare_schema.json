@@ -41,6 +41,23 @@
         "user_stories"
       ]
     },
+    "native": {
+      "type": "object",
+      "properties": {
+        "android": {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "integer",
+              "minimum": 8
+            },
+            "max": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
     "additionalInstructions": {
       "type": "string"
     }
