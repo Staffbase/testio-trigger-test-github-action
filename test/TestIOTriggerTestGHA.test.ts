@@ -55,12 +55,12 @@ describe("Trigger TestIO Test GHA", () => {
         return TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir, errorFileName);
     };
 
-    const setupWithMockedCommentRetrieval = (pathUnderRoot?: string) => {
+    const setupWithMockedCommentRetrieval = () => {
         // create a MockAgent to intercept request made using undici
         const agent = new MockAgent({connections: 1});
         setGlobalDispatcher(agent);
 
-        const retrievedComment: string = fs.readFileSync("testResources/expected-prepare-comment.md", 'utf8');
+        const retrievedComment: string = fs.readFileSync("testResources/expected-default-prepare-comment.md", 'utf8');
         // https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28#get-an-issue-comment
         agent
             .get("https://api.github.com")
@@ -70,7 +70,7 @@ describe("Trigger TestIO Test GHA", () => {
             })
             .reply(200, {body: retrievedComment}, {headers: {'Content-Type': 'application/json'}});
 
-        return TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir + (pathUnderRoot? pathUnderRoot : ''), errorFileName);
+        return TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir, errorFileName);
     };
 
     const setupWithMockedPrTitleRetrieval = (expectedPrTitle: undefined | string) => {
@@ -78,7 +78,7 @@ describe("Trigger TestIO Test GHA", () => {
         const agent = new MockAgent({connections: 1});
         setGlobalDispatcher(agent);
 
-        const retrievedComment: string = fs.readFileSync("testResources/expected-prepare-comment.md", 'utf8');
+        const retrievedComment: string = fs.readFileSync("testResources/expected-default-prepare-comment.md", 'utf8');
         // https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#get-a-pull-request
         agent
             .get("https://api.github.com")
@@ -144,41 +144,53 @@ describe("Trigger TestIO Test GHA", () => {
         await expect(gha.triggerTestIoTest()).rejects.toEqual(new Error("TestIO properties are not configured"));
     });
 
-    describe("Comment Creation for different contexts", () => {
+    describe("[default context] Comment Creation and Retrieval", () => {
 
-        it("should create comment for default context", async () => {
+        it("should create comment", async () => {
             const gha = setupWithMockedCommentCreation();
             const createCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#987654321`;
             const createdComment = await gha.addPrepareComment(createCommentUrl);
 
-            const expectedComment = fs.readFileSync("testResources/expected-prepare-comment.md", 'utf8');
+            const expectedComment = fs.readFileSync("testResources/expected-default-prepare-comment.md", 'utf8');
             expect(createdComment).toBe(expectedComment);
+        });
+
+        it("should retrieve content of a PR comment after editing", async () => {
+            const gha = setupWithMockedCommentRetrieval();
+            const submitCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#${submitCommentID}`;
+            const retrievedComment = await gha.retrieveCommentContent(submitCommentID, submitCommentUrl);
+
+            const expectedComment = fs.readFileSync("testResources/expected-default-prepare-comment.md", 'utf8');
+            expect(retrievedComment).toBe(expectedComment);
+        });
+
+        it("should retrieve prepare object from a retrieved comment of a PR after editing", async () => {
+            const gha = setupWithMockedCommentRetrieval();
+            const submitCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#${submitCommentID}`;
+            const retrievedComment = await gha.retrieveCommentContent(submitCommentID, submitCommentUrl);
+            const prepareObject: any = gha.retrieveValidPrepareObjectFromComment(retrievedComment);
+
+            expect(prepareObject.test_environment.url).toBe("your URL of preview deployment or built bundle from bot-the-builder");
+            expect(prepareObject.test_environment.access).toBe("provide credentials for the tester to access the environment");
+            expect(prepareObject.feature.title).toBe("The name of the feature to be tested");
+            expect(prepareObject.feature.description).toBe("A short description of the feature to be tested");
+            expect(prepareObject.feature.howtofind).toBe("Describe where to find the feature to be tested");
+            expect(prepareObject.feature.user_stories[0]).toBe("Add 1 or more user stories here which you want the tester to verify");
+            expect(prepareObject.additionalInstructions).toBe("(optional, remove it if not needed)");
         });
     });
 
+    describe("[Android context] Comment Creation and Retrieval", () => {
 
-    it("should retrieve content of a PR comment after editing", async () => {
-        const gha = setupWithMockedCommentRetrieval("/..");
-        const submitCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#${submitCommentID}`;
-        const retrievedComment = await gha.retrieveCommentContent(submitCommentID, submitCommentUrl);
+        it("should create comment", async () => {
+            const gha = setupWithMockedCommentCreation();
+            const createCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#987654321`;
+            const createdComment = await gha.addPrepareComment(createCommentUrl, "android");
 
-        const expectedComment = fs.readFileSync("testResources/expected-prepare-comment.md", 'utf8');
-        expect(retrievedComment).toBe(expectedComment);
-    });
+            const expectedComment = fs.readFileSync("testResources/expected-android-prepare-comment.md", 'utf8');
+            expect(createdComment).toBe(expectedComment);
+        });
 
-    it("should retrieve prepare object from a retrieved comment of a PR after editing", async () => {
-        const gha = setupWithMockedCommentRetrieval();
-        const submitCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#${submitCommentID}`;
-        const retrievedComment = await gha.retrieveCommentContent(submitCommentID, submitCommentUrl);
-        const prepareObject: any = gha.retrieveValidPrepareObjectFromComment(retrievedComment);
-
-        expect(prepareObject.test_environment.url).toBe("your URL of preview deployment or built bundle from bot-the-builder");
-        expect(prepareObject.test_environment.access).toBe("provide credentials for the tester to access the environment");
-        expect(prepareObject.feature.title).toBe("The name of the feature to be tested");
-        expect(prepareObject.feature.description).toBe("A short description of the feature to be tested");
-        expect(prepareObject.feature.howtofind).toBe("Describe where to find the feature to be tested");
-        expect(prepareObject.feature.user_stories[0]).toBe("Add 1 or more user stories here which you want the tester to verify");
-        expect(prepareObject.additionalInstructions).toBe("(optional, remove it if not needed)");
     });
 
     it("should retrieve PR title", async () => {
@@ -193,7 +205,7 @@ describe("Trigger TestIO Test GHA", () => {
     });
 
     it("should create TestIO payload and persist it in a file", async () => {
-        const retrievedComment: string = fs.readFileSync("testResources/expected-prepare-comment.md", 'utf8');
+        const retrievedComment: string = fs.readFileSync("testResources/expected-default-prepare-comment.md", 'utf8');
         let gha = TestIOTriggerTestGHA.createForGithub(githubToken, owner, repo, pr, actionRootDir, errorFileName);
         const prepareObject: any = gha.retrieveValidPrepareObjectFromComment(retrievedComment);
         const prTitle = "test: this is my test PR title";

@@ -27,7 +27,7 @@ describe("TestIO Trigger-from-PR Util", () => {
         const commentPrepareTemplateFile = "resources/exploratory_test_comment_prepare_template.md";
         const commentTemplate = fs.readFileSync(commentPrepareTemplateFile, 'utf8');
 
-        const commentPrepareJsonFile = "resources/exploratory_test_comment_prepare.json";
+        const commentPrepareJsonFile = "resources/exploratory_test_comment_prepare_default.json";
         const jsonString = fs.readFileSync(commentPrepareJsonFile, 'utf8');
 
         const requiredInformationPlaceholder = "$$REQUIRED_INFORMATION_TEMPLATE$$";
