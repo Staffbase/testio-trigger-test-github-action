@@ -52,7 +52,18 @@ You can also use a reusable workflow to enable this action in your repository de
 
 ## Use the Action to trigger a new test on TestIO from a PR
 
-To trigger a test on TestIO multiple steps are required:
+We highly recommend creating a separate product in your TestIO account dedicated to test creation from a PR.
+This avoids interference with the tests in your main product(s). 
+You can easily achieve that via the menu as can be seen in the following screenshot.
+
+<img src="docs/assets/images/testio-create-product.png" alt="create new TestIO product" />
+
+### For the Default Devices in Your Account
+
+In the product you dedicate for triggering tests from PRs we recommend configuring the default devices so that 
+they correspond to your required Desktop test environments. Refer to the [FAQs](#faqs) how to achieve this.
+
+To trigger a test on TestIO for your default devices the following steps are required:
 
 1. Add the comment `@bot-testio exploratory-test create` to the PR from which the test should be triggered.
    <img src="docs/assets/images/test-create.png" alt="create test comment" />
@@ -63,6 +74,36 @@ To trigger a test on TestIO multiple steps are required:
    <img src="docs/assets/images/test-submit.png" alt="submit test comment" />
 5. This triggers the test on TestIO and successful creation is commented back as a new comment.
    <img src="docs/assets/images/test-success.png" alt="success test comment" />
+
+### For Android Devices
+
+To trigger a test on TestIO explicitly for Android devices the same steps as described for [Default Devices](#for-the-default-devices-in-your-account)
+need to be followed but with the following small adjustment:
+
+- The comment to be added to trigger the whole process from step 1 needs to be `@bot-testio exploratory-test create android`.
+- In addition to the other requested information you now need to provide the following:
+  ```json
+  "native": {
+    "android": {
+      "min": 8,
+      "max": 10
+    }
+  }
+  ```
+- You need to provide minimal and maximum Android version of devices the testers should use.
+- Only `integer` values are allowed.
+- `min` is mandatory and `max` optional.
+- If `max` is not provided TestIO automatically sets it to `latest`.
+
+## FAQs
+
+<details>
+<summary>How/Where to configure the default devices on TestIO?</summary>
+Find the Default Devices in the menu as can be seen in the following screenshot.
+
+<img src="docs/assets/images/testio-manage-default-devices.png" alt="manage default TestIO devices" />
+
+</details>
 
 ## Contributing
 
