@@ -36,6 +36,45 @@ describe("TestIO Device API Util", () => {
         categoryName = "tablets";
         categoryId = await TestIOUtil.retrieveDeviceCategoryIdByName(categoryName);
         expect(categoryId).toBe(6);
+
+        // default is smartphone
+        categoryId = await TestIOUtil.retrieveDefaultMobileDeviceCategory();
+        expect(categoryId).toBe(2);
+    });
+
+    it('should return OS id for device category id', async () => {
+        let deviceCategoryId = -1;
+        let osName = "unknown OS";
+        let osId = await TestIOUtil.retrieveOperatingSystemIdByDeviceCategoryIdAndName(deviceCategoryId, osName);
+        expect(osId).toBe(-1);
+
+        deviceCategoryId = 2;
+        osName = "unknown OS";
+        osId = await TestIOUtil.retrieveOperatingSystemIdByDeviceCategoryIdAndName(deviceCategoryId, osName);
+        expect(osId).toBe(-1);
+
+        deviceCategoryId = 2;
+        osName = "Android";
+        osId = await TestIOUtil.retrieveOperatingSystemIdByDeviceCategoryIdAndName(deviceCategoryId, osName);
+        expect(osId).toBe(1);
+        deviceCategoryId = 2;
+        osName = "AnDRoid";
+        osId = await TestIOUtil.retrieveOperatingSystemIdByDeviceCategoryIdAndName(deviceCategoryId, osName);
+        expect(osId).toBe(1);
+
+        deviceCategoryId = 2;
+        osName = "iOs";
+        osId = await TestIOUtil.retrieveOperatingSystemIdByDeviceCategoryIdAndName(deviceCategoryId, osName);
+        expect(osId).toBe(2);
+
+        deviceCategoryId = 2;
+        osName = "windows-MoBiLe";
+        osId = await TestIOUtil.retrieveOperatingSystemIdByDeviceCategoryIdAndName(deviceCategoryId, osName);
+        expect(osId).toBe(9);
+        deviceCategoryId = 2;
+        osName = "windows mobile";
+        osId = await TestIOUtil.retrieveOperatingSystemIdByDeviceCategoryIdAndName(deviceCategoryId, osName);
+        expect(osId).toBe(9);
     });
 
 });

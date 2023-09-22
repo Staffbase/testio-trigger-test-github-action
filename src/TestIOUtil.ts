@@ -18,15 +18,33 @@ import {Util} from "./Util";
 
 export class TestIOUtil {
 
-    private static readonly ENDPOINT_LIST_CATEGORIES = "http://devices.test.io/api/categories";
+    private static readonly ENDPOINT_LIST_CATEGORIES = "https://devices.test.io/api/categories";
+    private static readonly ENDPOINT_LIST_OPERATING_SYSTEMS = (deviceCategoryId: number) => `https://devices.test.io/api/operating_systems?filter[category]=${deviceCategoryId}`;
+
+    private static readonly DEFAULT_MOBILE_CATEGORY_NAME = "smartphone";
 
     static async retrieveDeviceCategoryIdByName(categoryName: string): Promise<number> {
         const result = await Util.request("GET", this.ENDPOINT_LIST_CATEGORIES);
-        const categories: any[] = result.categories
+        const categories: any[] = result.categories;
         const expectedCategoryLower = categoryName.toLowerCase();
         const categoryFound = categories.find((category) => category.key.toLowerCase() === expectedCategoryLower || category.name.toLowerCase() === expectedCategoryLower);
         if (categoryFound) {
             return categoryFound.id;
+        }
+        return -1;
+    }
+
+    static async retrieveDefaultMobileDeviceCategory(): Promise<number> {
+        return this.retrieveDeviceCategoryIdByName(this.DEFAULT_MOBILE_CATEGORY_NAME);
+    }
+
+    static async retrieveOperatingSystemIdByDeviceCategoryIdAndName(deviceCategoryId: number, osName: string) {
+        const result = await Util.request("GET", this.ENDPOINT_LIST_OPERATING_SYSTEMS(deviceCategoryId));
+        const operatingSystems: any[] = result.operating_systems;
+        const expectedOsNameLower = osName.toLowerCase();
+        const osFound = operatingSystems.find((os) => os.key.toLowerCase() === expectedOsNameLower || os.name.toLowerCase() === expectedOsNameLower);
+        if (osFound) {
+            return osFound.id;
         }
         return -1;
     }
