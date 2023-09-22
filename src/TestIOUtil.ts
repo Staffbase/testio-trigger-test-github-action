@@ -20,7 +20,7 @@ export class TestIOUtil {
 
     private static readonly ENDPOINT_LIST_CATEGORIES = "http://devices.test.io/api/categories";
 
-    static async retrieveCategoryIdByName(categoryName: string): Promise<number> {
+    static async retrieveDeviceCategoryIdByName(categoryName: string): Promise<number> {
         const result = await Util.request("GET", this.ENDPOINT_LIST_CATEGORIES);
         const categories: any[] = result.categories
         const expectedCategoryLower = categoryName.toLowerCase();

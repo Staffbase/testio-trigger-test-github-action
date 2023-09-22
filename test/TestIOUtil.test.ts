@@ -20,21 +20,21 @@ describe("TestIO Device API Util", () => {
 
     it('should return category id for name', async () => {
         let categoryName = "non-existent";
-        let categoryId = await TestIOUtil.retrieveCategoryIdByName(categoryName);
+        let categoryId = await TestIOUtil.retrieveDeviceCategoryIdByName(categoryName);
         expect(categoryId).toBe(-1);
 
         categoryName = "SmArtpHone";
-        categoryId = await TestIOUtil.retrieveCategoryIdByName(categoryName);
+        categoryId = await TestIOUtil.retrieveDeviceCategoryIdByName(categoryName);
         expect(categoryId).toBe(2);
         categoryName = "SmArtphoneS";
-        categoryId = await TestIOUtil.retrieveCategoryIdByName(categoryName);
+        categoryId = await TestIOUtil.retrieveDeviceCategoryIdByName(categoryName);
         expect(categoryId).toBe(2);
 
         categoryName = "tAbLeT";
-        categoryId = await TestIOUtil.retrieveCategoryIdByName(categoryName);
+        categoryId = await TestIOUtil.retrieveDeviceCategoryIdByName(categoryName);
         expect(categoryId).toBe(6);
         categoryName = "tablets";
-        categoryId = await TestIOUtil.retrieveCategoryIdByName(categoryName);
+        categoryId = await TestIOUtil.retrieveDeviceCategoryIdByName(categoryName);
         expect(categoryId).toBe(6);
     });
 
