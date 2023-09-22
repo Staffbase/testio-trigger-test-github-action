@@ -99,14 +99,22 @@ export class Util {
         return testioPayload;
     }
 
-    public static async request(requestMethod: string, endpoint: string, authToken: string, bodyObject?: any): Promise<any> {
+    public static async request(requestMethod: string, endpoint: string, authToken?: string, bodyObject?: any): Promise<any> {
         const authTokenString = `Token ${authToken}`;
         let request = {
             method: requestMethod,
             headers: {
-                'Authorization': `${authTokenString}`
             }
         };
+
+        if (authToken) {
+            request.headers = {
+                ...request.headers, ...{
+                    'Authorization': `${authTokenString}`
+                }
+            };
+        }
+
         if (bodyObject) {
             request.headers = {
                 ...request.headers, ...{
