@@ -20,6 +20,7 @@ export class TestIOUtil {
 
     private static readonly ENDPOINT_LIST_CATEGORIES = "https://devices.test.io/api/categories";
     private static readonly ENDPOINT_LIST_OPERATING_SYSTEMS = (deviceCategoryId: number) => `https://devices.test.io/api/operating_systems?filter[category]=${deviceCategoryId}`;
+    private static readonly ENDPOINT_LIST_OPERATING_SYSTEM_VERSIONS = (osId: number, offset: number) => `http://devices.test.io/api/operating_system_versions?filter[operating_system]=${osId}&offset=${offset}`;
 
     private static readonly DEFAULT_MOBILE_CATEGORY_NAME = "smartphone";
 
@@ -38,13 +39,35 @@ export class TestIOUtil {
         return this.retrieveDeviceCategoryIdByName(this.DEFAULT_MOBILE_CATEGORY_NAME);
     }
 
-    static async retrieveOperatingSystemIdByDeviceCategoryIdAndName(deviceCategoryId: number, osName: string) {
+    static async retrieveOperatingSystemIdByDeviceCategoryIdAndName(deviceCategoryId: number, osName: string): Promise<number> {
         const result = await Util.request("GET", this.ENDPOINT_LIST_OPERATING_SYSTEMS(deviceCategoryId));
         const operatingSystems: any[] = result.operating_systems;
         const expectedOsNameLower = osName.toLowerCase();
         const osFound = operatingSystems.find((os) => os.key.toLowerCase() === expectedOsNameLower || os.name.toLowerCase() === expectedOsNameLower);
         if (osFound) {
             return osFound.id;
+        }
+        return -1;
+    }
+
+    static async retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId: number, version: string): Promise<number> {
+        const startingOffset = 0;
+        return this.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersionAndOffset(osId, version, startingOffset);
+    }
+
+    private static async retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersionAndOffset(osId: number, expectedVersion: string, offset: number): Promise<number> {
+        const result = await Util.request("GET", this.ENDPOINT_LIST_OPERATING_SYSTEM_VERSIONS(osId, offset));
+        const totalVersions = result.pagination.total;
+        const limit = result.pagination.limit;
+        const currentOffset = result.pagination.offset;
+        const nextOffset = currentOffset + limit;
+
+        const osVersions: any[] = result.operating_system_versions;
+        const osVersionFound = osVersions.find((osVersion) => osVersion.name.toLowerCase() === expectedVersion.toLowerCase());
+        if (osVersionFound) {
+            return osVersionFound.id;
+        } else if (nextOffset < totalVersions) {
+            return this.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersionAndOffset(osId, expectedVersion, nextOffset);
         }
         return -1;
     }

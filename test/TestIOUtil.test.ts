@@ -18,7 +18,7 @@ import {TestIOUtil} from "../src/TestIOUtil";
 
 describe("TestIO Device API Util", () => {
 
-    it('should return category id for name', async () => {
+    it('should return device category id for name', async () => {
         let categoryName = "non-existent";
         let categoryId = await TestIOUtil.retrieveDeviceCategoryIdByName(categoryName);
         expect(categoryId).toBe(-1);
@@ -42,7 +42,7 @@ describe("TestIO Device API Util", () => {
         expect(categoryId).toBe(2);
     });
 
-    it('should return OS id for device category id', async () => {
+    it('should return OS id for device category id and OS name', async () => {
         let deviceCategoryId = -1;
         let osName = "unknown OS";
         let osId = await TestIOUtil.retrieveOperatingSystemIdByDeviceCategoryIdAndName(deviceCategoryId, osName);
@@ -75,6 +75,45 @@ describe("TestIO Device API Util", () => {
         osName = "windows mobile";
         osId = await TestIOUtil.retrieveOperatingSystemIdByDeviceCategoryIdAndName(deviceCategoryId, osName);
         expect(osId).toBe(9);
+    });
+
+    it('should return OS version id for device category id, OS name and version string', async () => {
+        let osId = -1;
+        let version = "no.valid.version";
+        let osVersionId = await TestIOUtil.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId, version);
+        expect(osVersionId).toBe(-1);
+
+        // Android
+        osId = 1;
+        version = "no.valid.version";
+        osVersionId = await TestIOUtil.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId, version);
+        expect(osVersionId).toBe(-1);
+        version = "3.0";
+        osVersionId = await TestIOUtil.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId, version);
+        expect(osVersionId).toBe(-1);
+        // result on the first page of this endpoint
+        version = "4.0.1";
+        osVersionId = await TestIOUtil.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId, version);
+        expect(osVersionId).toBe(22);
+        // result on the second page of this endpoint
+        version = "8.1 (go edition)";
+        osVersionId = await TestIOUtil.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId, version);
+        expect(osVersionId).toBe(314);
+
+        // iOS
+        osId = 2;
+        // result on the first page of this endpoint
+        version = "7.0.2";
+        osVersionId = await TestIOUtil.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId, version);
+        expect(osVersionId).toBe(76);
+        // result on the second page of this endpoint
+        version = "8.0.2";
+        osVersionId = await TestIOUtil.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId, version);
+        expect(osVersionId).toBe(144);
+        // result on the last page of this endpoint
+        version = "17.0.1";
+        osVersionId = await TestIOUtil.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId, version);
+        expect(osVersionId).toBe(809);
     });
 
 });
