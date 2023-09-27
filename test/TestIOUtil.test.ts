@@ -116,7 +116,7 @@ describe("TestIO Device API Util", () => {
         expect(osVersionId).toBe(809);
     });
 
-    // @bot-testio exploratory-test create smartphone ios
+    // @bot-testio exploratory-test create ios smartphone
     it('should translate device spec into TestIO device payload', async () => {
         const osName = "ios";
         const categoryName = "smartphone";
@@ -160,6 +160,45 @@ describe("TestIO Device API Util", () => {
                         id: maxVersionId,
                         name: maxVersion
                     }
+                }
+            ]
+        }
+        expect(devicePayload).toEqual(expectedDevicePayload);
+    });
+
+    it('should translate device spec without max version into TestIO device payload', async () => {
+        const osName = "ios";
+        const categoryName = "smartphone";
+        const minVersion = "10.1";
+
+        const deviceSpec = {
+            device: {
+                os: osName,
+                category: categoryName,
+                min: minVersion
+            }
+        };
+        const categoryId = 2;
+        const osId = 2;
+        const minVersionId = 224;
+
+        const devicePayload = await TestIOUtil.getDevicePayloadFromPrepareObjectDeviceSpec(deviceSpec);
+        const expectedDevicePayload = {
+            requirements: [
+                {
+                    category: {
+                        id: categoryId,
+                        name: categoryName
+                    },
+                    operating_system: {
+                        id: osId,
+                        name: osName
+                    },
+                    min_operating_system_version: {
+                        id: minVersionId,
+                        name: minVersion
+                    },
+                    max_operating_system_version: null
                 }
             ]
         }
