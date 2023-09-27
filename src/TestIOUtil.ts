@@ -50,7 +50,7 @@ export class TestIOUtil {
         return -1;
     }
 
-    static async retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId: number, version: string): Promise<number> {
+    static async retrieveOsVersionIdByOsIdAndVersion(osId: number, version: string): Promise<number> {
         const startingOffset = 0;
         return this.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersionAndOffset(osId, version, startingOffset);
     }
@@ -70,5 +70,35 @@ export class TestIOUtil {
             return this.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersionAndOffset(osId, expectedVersion, nextOffset);
         }
         return -1;
+    }
+
+    static async getDevicePayloadFromPrepareObjectDeviceSpec(deviceSpec: { device: { category: string; os: string; min: string; max?: string; } }): Promise<any> {
+        const categoryId = await TestIOUtil.retrieveDeviceCategoryIdByName(deviceSpec.device.category);
+        const osId = await TestIOUtil.retrieveOperatingSystemIdByDeviceCategoryIdAndName(categoryId, deviceSpec.device.os);
+        const minVersionId = await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, deviceSpec.device.min);
+        const maxVersionId = (deviceSpec.device.max ? await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, deviceSpec.device.max) : null);
+
+        return {
+            requirements: [
+                {
+                    category: {
+                        id: categoryId,
+                        name: deviceSpec.device.category
+                    },
+                    operating_system: {
+                        id: osId,
+                        name: deviceSpec.device.os
+                    },
+                    min_operating_system_version: {
+                        id: minVersionId,
+                        name: deviceSpec.device.min
+                    },
+                    max_operating_system_version: (maxVersionId ? {
+                        id: maxVersionId,
+                        name: deviceSpec.device.max
+                    } : null)
+                }
+            ]
+        }
     }
 }

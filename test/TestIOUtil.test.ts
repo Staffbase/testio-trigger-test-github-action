@@ -80,40 +80,90 @@ describe("TestIO Device API Util", () => {
     it('should return OS version id for device category id, OS name and version string', async () => {
         let osId = -1;
         let version = "no.valid.version";
-        let osVersionId = await TestIOUtil.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId, version);
+        let osVersionId = await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, version);
         expect(osVersionId).toBe(-1);
 
         // Android
         osId = 1;
         version = "no.valid.version";
-        osVersionId = await TestIOUtil.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId, version);
+        osVersionId = await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, version);
         expect(osVersionId).toBe(-1);
         version = "3.0";
-        osVersionId = await TestIOUtil.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId, version);
+        osVersionId = await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, version);
         expect(osVersionId).toBe(-1);
         // result on the first page of this endpoint
         version = "4.0.1";
-        osVersionId = await TestIOUtil.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId, version);
+        osVersionId = await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, version);
         expect(osVersionId).toBe(22);
         // result on the second page of this endpoint
         version = "8.1 (go edition)";
-        osVersionId = await TestIOUtil.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId, version);
+        osVersionId = await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, version);
         expect(osVersionId).toBe(314);
 
         // iOS
         osId = 2;
         // result on the first page of this endpoint
         version = "7.0.2";
-        osVersionId = await TestIOUtil.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId, version);
+        osVersionId = await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, version);
         expect(osVersionId).toBe(76);
         // result on the second page of this endpoint
         version = "8.0.2";
-        osVersionId = await TestIOUtil.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId, version);
+        osVersionId = await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, version);
         expect(osVersionId).toBe(144);
         // result on the last page of this endpoint
         version = "17.0.1";
-        osVersionId = await TestIOUtil.retrieveOsVersionIdByDeviceCategoryIdAndOsNameAndVersion(osId, version);
+        osVersionId = await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, version);
         expect(osVersionId).toBe(809);
+    });
+
+    // @bot-testio exploratory-test create smartphone ios
+    it('should translate device spec into TestIO device payload', async () => {
+        const osName = "ios";
+        const categoryName = "smartphone";
+        const minVersion = "10.1";
+        const maxVersion = "15";
+
+        const deviceSpec = {
+          device: {
+              os: osName,
+              category: categoryName,
+              min: minVersion,
+              max: maxVersion
+          }
+        };
+        // const categoryId = await TestIOUtil.retrieveDeviceCategoryIdByName(categoryName);
+        const categoryId = 2;
+        //const osId = await TestIOUtil.retrieveOperatingSystemIdByDeviceCategoryIdAndName(categoryId, osName);
+        const osId = 2;
+        //const minVersionId = await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, minVersion);
+        const minVersionId = 224;
+        //const maxVersionId = await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, maxVersion);
+        const maxVersionId = 559;
+
+        const devicePayload = await TestIOUtil.getDevicePayloadFromPrepareObjectDeviceSpec(deviceSpec);
+        const expectedDevicePayload = {
+            requirements: [
+                {
+                    category: {
+                        id: categoryId,
+                        name: categoryName
+                    },
+                    operating_system: {
+                        id: osId,
+                        name: osName
+                    },
+                    min_operating_system_version: {
+                        id: minVersionId,
+                        name: minVersion
+                    },
+                    max_operating_system_version: {
+                        id: maxVersionId,
+                        name: maxVersion
+                    }
+                }
+            ]
+        }
+        expect(devicePayload).toEqual(expectedDevicePayload);
     });
 
 });
