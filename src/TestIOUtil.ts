@@ -72,33 +72,72 @@ export class TestIOUtil {
         return -1;
     }
 
-    static async getDevicePayloadFromPrepareObjectDeviceSpec(deviceSpec: { device: { category: string; os: string; min: string; max?: string; } }): Promise<any> {
-        const categoryId = await TestIOUtil.retrieveDeviceCategoryIdByName(deviceSpec.device.category);
-        const osId = await TestIOUtil.retrieveOperatingSystemIdByDeviceCategoryIdAndName(categoryId, deviceSpec.device.os);
-        const minVersionId = await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, deviceSpec.device.min);
-        const maxVersionId = (deviceSpec.device.max ? await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, deviceSpec.device.max) : null);
+    static async getDevicePayloadFromPrepareObjectDeviceSpec(device: { category: string; os: string; min: string; max?: string; } ): Promise<any> {
+        const categoryId = await TestIOUtil.retrieveDeviceCategoryIdByName(device.category);
+        const osId = await TestIOUtil.retrieveOperatingSystemIdByDeviceCategoryIdAndName(categoryId, device.os);
+        const minVersionId = await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, device.min);
+        const maxVersionId = (device.max ? await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, device.max) : null);
 
         return {
             requirements: [
                 {
                     category: {
                         id: categoryId,
-                        name: deviceSpec.device.category
+                        name: device.category
                     },
                     operating_system: {
                         id: osId,
-                        name: deviceSpec.device.os
+                        name: device.os
                     },
                     min_operating_system_version: {
                         id: minVersionId,
-                        name: deviceSpec.device.min
+                        name: device.min
                     },
                     max_operating_system_version: (maxVersionId ? {
                         id: maxVersionId,
-                        name: deviceSpec.device.max
+                        name: device.max
                     } : null)
                 }
             ]
         }
     }
+
+
+    public static async convertPrepareObjectToTestIOPayload(prepareObject: any, repo: string, owner: string, pr: number, prTitle: string): Promise<any> {
+        const titleBase = `[${owner}/${repo}/${pr}]${prTitle}`;
+        const testioPayload = {
+            exploratory_test: {
+                test_title: titleBase,
+                test_environment: {
+                    // 80 is restriction from TestIO
+                    title: Util.truncateString(titleBase, 80, "[test environment]", true),
+                    url: prepareObject.test_environment.url,
+                    access: prepareObject.test_environment.access,
+                },
+                features: [
+                    {
+                        id: 0,
+                        title: prepareObject.feature.title,
+                        description: prepareObject.feature.description,
+                        howtofind: prepareObject.feature.howtofind,
+                        user_stories: prepareObject.feature.user_stories
+                    }
+                ],
+                instructions: (prepareObject.additionalInstructions ? prepareObject.additionalInstructions : null),
+                duration: "2",
+                testing_type: "rapid"
+            }
+        };
+
+        if (prepareObject.device) {
+            const requirements = await TestIOUtil.getDevicePayloadFromPrepareObjectDeviceSpec(prepareObject.device);
+            testioPayload.exploratory_test = {
+                ...testioPayload.exploratory_test,
+                ...requirements
+            }
+        }
+
+        return testioPayload;
+    }
+
 }

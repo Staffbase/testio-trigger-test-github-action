@@ -14,14 +14,13 @@
       "Add 1 or more user stories here which you want the tester to verify"
     ]
   },
-  "native": {
-    "android": {
-      "min": 8,
-      "max": 10
-    }
-  },
-  "additionalInstructions": "(optional, remove it if not needed)"
+  "additionalInstructions": "(optional, remove it if not needed)",
+  "device": {
+    "os": "android",
+    "category": "smartphones",
+    "min": "8.0",
+    "max": "10"
+  }
 }
-
 ```
 As response to [test creation trigger](https://github.com/Me/awesomeRepo/issues/666/comments#987654321).

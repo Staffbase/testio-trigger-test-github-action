@@ -20,13 +20,15 @@ import * as core from "@actions/core";
 import {Util} from "./Util";
 import betterAjvErrors from "better-ajv-errors";
 import * as path from "path";
+import {TestIOUtil} from "./TestIOUtil";
 
 export class TestIOTriggerTestGHA {
+
+    public static readonly CREATE_COMMENT_PREFIX = "@bot-testio exploratory-test create ";
 
     public static readonly persistedPayloadFile = 'temp/testio_payload.json';
     private static readonly commentPrepareTemplateFile = "exploratory_test_comment_prepare_template.md";
     private static readonly commentPrepareDefaultJsonFile = "exploratory_test_comment_prepare_default.json";
-    private static readonly commentPrepareAndroidJsonFile = "exploratory_test_comment_prepare_android.json";
 
     private _githubToken?: string;
     private _owner?: string;
@@ -102,7 +104,7 @@ export class TestIOTriggerTestGHA {
         return this._testioToken;
     }
 
-    public async addPrepareComment(createCommentUrl: string, context: string = "default"): Promise<string> {
+    public async addPrepareComment(createCommentUrl: string, createCommentBody: string): Promise<string> {
         if (!(this.githubToken && this.repo && this.owner && this.pr)) {
             const errorMessage = "Github properties are not configured";
             const error = Util.prepareErrorMessageAndOptionallyThrow(errorMessage, this.errorFile, true);
@@ -112,21 +114,31 @@ export class TestIOTriggerTestGHA {
         const commentPrepareTemplateFile = `${this.actionRootDir}/resources/${TestIOTriggerTestGHA.commentPrepareTemplateFile}`;
         const commentTemplate = fs.readFileSync(commentPrepareTemplateFile, 'utf8');
 
-        let contextJsonFile: string;
-        switch (context) {
-            case "android": {
-                contextJsonFile = TestIOTriggerTestGHA.commentPrepareAndroidJsonFile;
-                break;
-            }
+        let device: any = null;
+        const commentSuffix = createCommentBody.replace(TestIOTriggerTestGHA.CREATE_COMMENT_PREFIX, "").trim();
 
-            case "default":
-            default: {
-                contextJsonFile = TestIOTriggerTestGHA.commentPrepareDefaultJsonFile;
-            }
+        if (commentSuffix) {
+            const deviceSpecParts = commentSuffix.split(/\s+/);
+            const osName = deviceSpecParts[0];
+            const categoryName = (deviceSpecParts[1] ? deviceSpecParts[1] : "smartphones");
+            device = {
+                    os: osName,
+                    category: categoryName,
+                    min: "8.0",
+                    max: "10"
+            };
         }
 
-        const commentPrepareJsonFile = `${this.actionRootDir}/resources/${contextJsonFile}`;
-        const jsonString = fs.readFileSync(commentPrepareJsonFile, 'utf8');
+        const commentPrepareJsonFile = `${this.actionRootDir}/resources/${TestIOTriggerTestGHA.commentPrepareDefaultJsonFile}`;
+        let jsonString = fs.readFileSync(commentPrepareJsonFile, 'utf8');
+        let jsonObject = JSON.parse(jsonString);
+        if (device) {
+            jsonObject = {
+                ...jsonObject,
+                device
+            };
+        }
+        jsonString = JSON.stringify(jsonObject, null, 2);
 
         const requiredInformationPlaceholder = "$$REQUIRED_INFORMATION_TEMPLATE$$";
         const createCommentPlaceholder = "$$CREATE_COMMENT_URL$$";
@@ -221,14 +233,14 @@ export class TestIOTriggerTestGHA {
         return prTitle;
     }
 
-    public createAndPersistTestIoPayload(prepareObject: any, prTitle: string): any {
+    public async createAndPersistTestIoPayload(prepareObject: any, prTitle: string): Promise<any> {
         if (!(this.repo && this.owner && this.pr)) {
             const errorMessage = "Github properties are not configured";
             const error = Util.prepareErrorMessageAndOptionallyThrow(errorMessage, this.errorFile, true);
             return Promise.reject(error);
         }
 
-        const testIOPayload = Util.convertPrepareObjectToTestIOPayload(
+        const testIOPayload = await TestIOUtil.convertPrepareObjectToTestIOPayload(
             prepareObject,
             this.repo,
             this.owner,

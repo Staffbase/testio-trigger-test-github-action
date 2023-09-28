@@ -15,8 +15,25 @@
  */
 
 import {TestIOUtil} from "../src/TestIOUtil";
+import {Util} from "../src/Util";
+import fs from "fs";
 
 describe("TestIO Device API Util", () => {
+
+    let commentBody: string;
+
+    beforeEach(() => {
+        const commentPrepareTemplateFile = "resources/exploratory_test_comment_prepare_template.md";
+        const commentTemplate = fs.readFileSync(commentPrepareTemplateFile, 'utf8');
+
+        const commentPrepareJsonFile = "resources/exploratory_test_comment_prepare_default.json";
+        const jsonString = fs.readFileSync(commentPrepareJsonFile, 'utf8');
+
+        const requiredInformationPlaceholder = "$$REQUIRED_INFORMATION_TEMPLATE$$";
+        const createCommentPlaceholder = "$$CREATE_COMMENT_URL$$";
+        const url = "https://github.com/MyOrg/myrepo/issues/123456/comments#98765432";
+        commentBody = commentTemplate.replace(requiredInformationPlaceholder, jsonString).replace(createCommentPlaceholder, url);
+    });
 
     it('should return device category id for name', async () => {
         let categoryName = "non-existent";
@@ -123,13 +140,11 @@ describe("TestIO Device API Util", () => {
         const minVersion = "10.1";
         const maxVersion = "15";
 
-        const deviceSpec = {
-          device: {
+        const device = {
               os: osName,
               category: categoryName,
               min: minVersion,
               max: maxVersion
-          }
         };
         // const categoryId = await TestIOUtil.retrieveDeviceCategoryIdByName(categoryName);
         const categoryId = 2;
@@ -140,7 +155,7 @@ describe("TestIO Device API Util", () => {
         //const maxVersionId = await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, maxVersion);
         const maxVersionId = 559;
 
-        const devicePayload = await TestIOUtil.getDevicePayloadFromPrepareObjectDeviceSpec(deviceSpec);
+        const devicePayload = await TestIOUtil.getDevicePayloadFromPrepareObjectDeviceSpec(device);
         const expectedDevicePayload = {
             requirements: [
                 {
@@ -171,18 +186,16 @@ describe("TestIO Device API Util", () => {
         const categoryName = "smartphone";
         const minVersion = "10.1";
 
-        const deviceSpec = {
-            device: {
+        const device = {
                 os: osName,
                 category: categoryName,
                 min: minVersion
-            }
         };
         const categoryId = 2;
         const osId = 2;
         const minVersionId = 224;
 
-        const devicePayload = await TestIOUtil.getDevicePayloadFromPrepareObjectDeviceSpec(deviceSpec);
+        const devicePayload = await TestIOUtil.getDevicePayloadFromPrepareObjectDeviceSpec(device);
         const expectedDevicePayload = {
             requirements: [
                 {
@@ -205,4 +218,72 @@ describe("TestIO Device API Util", () => {
         expect(devicePayload).toEqual(expectedDevicePayload);
     });
 
+    it('should convert prepare object into TestIO payload', async () => {
+        const prepareObject = Util.retrievePrepareObjectFromComment(commentBody);
+        const repo = "testio-management";
+        const owner = "Staffbase";
+        const pr = 666;
+        const prTitle = "My awesome feature";
+        const testioPayload = await TestIOUtil.convertPrepareObjectToTestIOPayload(prepareObject, repo, owner, pr, prTitle);
+        const testName = `[${owner}/${repo}/${pr}]${prTitle}`;
+        expect(testioPayload.exploratory_test.test_title).toBe(testName);
+        expect(testioPayload.exploratory_test.test_environment.title).toBe(testName + "[test environment]");
+        expect(testioPayload.exploratory_test.test_environment.url).toBe(prepareObject.test_environment.url);
+        expect(testioPayload.exploratory_test.test_environment.access).toBe(prepareObject.test_environment.access);
+        expect(testioPayload.exploratory_test.features[0].title).toBe(prepareObject.feature.title);
+        expect(testioPayload.exploratory_test.features[0].description).toBe(prepareObject.feature.description);
+        expect(testioPayload.exploratory_test.features[0].howtofind).toBe(prepareObject.feature.howtofind);
+        expect(testioPayload.exploratory_test.features[0].user_stories).toBe(prepareObject.feature.user_stories);
+        expect(testioPayload.exploratory_test.instructions).toBe(prepareObject.additionalInstructions);
+    });
+
+    it('should convert prepare object into TestIO payload without additional instructions', async () => {
+        const prepareObject = Util.retrievePrepareObjectFromComment(commentBody);
+        delete prepareObject.additionalInstructions;
+        const repo = "testio-management";
+        const owner = "Staffbase";
+        const pr = 666;
+        const prTitle = "My awesome feature";
+        const testioPayload = await TestIOUtil.convertPrepareObjectToTestIOPayload(prepareObject, repo, owner, pr, prTitle);
+        const testName = `[${owner}/${repo}/${pr}]${prTitle}`;
+        expect(testioPayload.exploratory_test.test_title).toBe(testName);
+        expect(testioPayload.exploratory_test.test_environment.title).toBe(testName + "[test environment]");
+        expect(testioPayload.exploratory_test.test_environment.url).toBe(prepareObject.test_environment.url);
+        expect(testioPayload.exploratory_test.test_environment.access).toBe(prepareObject.test_environment.access);
+        expect(testioPayload.exploratory_test.features[0].title).toBe(prepareObject.feature.title);
+        expect(testioPayload.exploratory_test.features[0].description).toBe(prepareObject.feature.description);
+        expect(testioPayload.exploratory_test.features[0].howtofind).toBe(prepareObject.feature.howtofind);
+        expect(testioPayload.exploratory_test.features[0].user_stories).toBe(prepareObject.feature.user_stories);
+        expect(testioPayload.exploratory_test.instructions).toBeNull();
+    });
+
+    it('should convert Android prepare object into TestIO payload', async () => {
+        const retrievedComment: string = fs.readFileSync("testResources/expected-android-prepare-comment.md", 'utf8');
+        const prepareObject = await Util.retrievePrepareObjectFromComment(retrievedComment);
+        const repo = "testio-management";
+        const owner = "Staffbase";
+        const pr = 666;
+        const prTitle = "My awesome feature";
+        let testioPayload = await TestIOUtil.convertPrepareObjectToTestIOPayload(prepareObject, repo, owner, pr, prTitle);
+        const message = JSON.stringify(testioPayload, null, 2);
+        console.log(message);
+        expect(testioPayload.exploratory_test.requirements[0].category.name).toBe("smartphones");
+        expect(testioPayload.exploratory_test.requirements[0].category.id).toBe(2);
+        expect(testioPayload.exploratory_test.requirements[0].operating_system.name).toBe("android");
+        expect(testioPayload.exploratory_test.requirements[0].operating_system.id).toBe(1);
+        expect(testioPayload.exploratory_test.requirements[0].min_operating_system_version.name).toBe("8.0");
+        expect(testioPayload.exploratory_test.requirements[0].min_operating_system_version.id).toBe(266);
+        expect(testioPayload.exploratory_test.requirements[0].max_operating_system_version.name).toBe("10");
+        expect(testioPayload.exploratory_test.requirements[0].max_operating_system_version.id).toBe(380);
+
+        delete prepareObject.device.max;
+        testioPayload = await TestIOUtil.convertPrepareObjectToTestIOPayload(prepareObject, repo, owner, pr, prTitle);
+        expect(testioPayload.exploratory_test.requirements[0].category.name).toBe("smartphones");
+        expect(testioPayload.exploratory_test.requirements[0].category.id).toBe(2);
+        expect(testioPayload.exploratory_test.requirements[0].operating_system.name).toBe("android");
+        expect(testioPayload.exploratory_test.requirements[0].operating_system.id).toBe(1);
+        expect(testioPayload.exploratory_test.requirements[0].min_operating_system_version.name).toBe("8.0");
+        expect(testioPayload.exploratory_test.requirements[0].min_operating_system_version.id).toBe(266);
+        expect(testioPayload.exploratory_test.requirements[0].max_operating_system_version).toBeNull();
+    });
 });
