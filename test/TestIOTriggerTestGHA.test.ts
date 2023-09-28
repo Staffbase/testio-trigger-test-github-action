@@ -216,6 +216,16 @@ describe("Trigger TestIO Test GHA", () => {
             expect(createdComment).toBe(expectedComment);
         });
 
+        it("should create comment for 'android tablets'", async () => {
+            const gha = setupWithMockedCommentCreation();
+            const createCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#987654321`;
+
+            const createCommentBody = TestIOTriggerTestGHA.CREATE_COMMENT_PREFIX + 'android    tablets';
+            const createdComment = await gha.addPrepareComment(createCommentUrl, createCommentBody);
+            const expectedComment = fs.readFileSync("testResources/expected-android-tablets-prepare-comment.md", 'utf8');
+            expect(createdComment).toBe(expectedComment);
+        });
+
         it("should retrieve content of a PR comment after editing", async () => {
             const gha = setupWithMockedCommentRetrieval("expected-android-prepare-comment.md");
             const submitCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#${submitCommentID}`;
