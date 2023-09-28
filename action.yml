@@ -45,23 +45,15 @@ runs:
         cd ${{github.action_path}}
         npm install
 
-    - name: TestIO - Add PR comment for requesting required input for default context
-      id: prepare-default
-      if: startsWith(github.event.comment.body, '@bot-testio exploratory-test create') && !startsWith(github.event.comment.body, '@bot-testio exploratory-test create android')
-      env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
-        TESTIO_CREATE_COMMENT_URL: ${{ github.event.comment.html_url }}
-      shell: bash
-      run: npx ts-node ${{github.action_path}}/src/addPRcomment.ts default
-
-    - name: TestIO - Add PR comment for requesting required input for Android context
+    - name: TestIO - Add PR comment for requesting required input
       id: prepare-android
-      if: startsWith(github.event.comment.body, '@bot-testio exploratory-test create android')
+      if: startsWith(github.event.comment.body, '@bot-testio exploratory-test create')
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         TESTIO_CREATE_COMMENT_URL: ${{ github.event.comment.html_url }}
+        TESTIO_CREATE_COMMENT_BODY: ${{ github.event.comment.body }}
       shell: bash
-      run: npx ts-node ${{github.action_path}}/src/addPRcomment.ts android
+      run: npx ts-node ${{github.action_path}}/src/addPRcomment.ts
 
     - name: TestIO - Retrieve input and create payload
       id: payload
