@@ -17,7 +17,6 @@
 import fs from "fs";
 import Ajv, {ValidateFunction} from "ajv";
 import path from "path";
-import {TestIOUtil} from "./TestIOUtil";
 
 export class Util {
 
