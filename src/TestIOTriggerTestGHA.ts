@@ -240,13 +240,22 @@ export class TestIOTriggerTestGHA {
             return Promise.reject(error);
         }
 
-        const testIOPayload = await TestIOUtil.convertPrepareObjectToTestIOPayload(
-            prepareObject,
-            this.repo,
-            this.owner,
-            this.pr,
-            prTitle
-        );
+        let testIOPayload: any;
+        try {
+            testIOPayload = await TestIOUtil.convertPrepareObjectToTestIOPayload(
+                prepareObject,
+                this.repo,
+                this.owner,
+                this.pr,
+                prTitle
+            );
+        } catch (error) {
+            if (error instanceof Error) {
+                Util.prepareErrorMessageAndOptionallyThrow(error.message, this.errorFile);
+            }
+            Util.prepareErrorMessageAndOptionallyThrow(String(error), this.errorFile);
+        }
+
         console.log("Converted payload:");
         console.log(testIOPayload);
         const payloadFile = `${this.actionRootDir}/${TestIOTriggerTestGHA.persistedPayloadFile}`;
