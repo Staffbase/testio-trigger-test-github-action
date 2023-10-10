@@ -41,28 +41,28 @@
         "user_stories"
       ]
     },
-    "native": {
-      "type": "object",
-      "properties": {
-        "android": {
-          "type": "object",
-          "properties": {
-            "min": {
-              "type": "integer",
-              "minimum": 8
-            },
-            "max": {
-              "type": "integer"
-            }
-          },
-          "required": [
-            "min"
-          ]
-        }
-      }
-    },
     "additionalInstructions": {
       "type": "string"
+    },
+    "device": {
+      "type": "object",
+      "properties": {
+        "os": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "min": {
+          "type": "string"
+        },
+        "max": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "os", "category", "min"
+      ]
     }
   },
   "additionalProperties": false,

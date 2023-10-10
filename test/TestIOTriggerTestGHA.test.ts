@@ -30,6 +30,7 @@ describe("Trigger TestIO Test GHA", () => {
     const errorFileName = "temp/errorToComment.msg";
     const testioProductId = "333666999";
     const testioToken = "MY_TESTIO_DUMMY_TOKEN";
+    const defaultCreateCommentBody = TestIOTriggerTestGHA.CREATE_COMMENT_PREFIX;
 
     beforeEach(() => {
         if (!fs.existsSync(actionRootDir)) {
@@ -134,7 +135,7 @@ describe("Trigger TestIO Test GHA", () => {
     it("should check wrong instantiation of GHA", async () => {
         // instantiate for TestIO but call a function specific to Github
         let gha = TestIOTriggerTestGHA.createForTestIO("dummy", "dummy", actionRootDir, errorFileName);
-        await expect(gha.addPrepareComment("dummy")).rejects.toEqual(new Error("Github properties are not configured"));
+        await expect(gha.addPrepareComment("dummy", defaultCreateCommentBody)).rejects.toEqual(new Error("Github properties are not configured"));
         await expect(gha.retrieveCommentContent(-1, "dummy")).rejects.toEqual(new Error("Github properties are not configured"));
         await expect(gha.retrievePrTitle()).rejects.toEqual(new Error("Github properties are not configured"));
         await expect(gha.createAndPersistTestIoPayload({}, "dummy")).rejects.toEqual(new Error("Github properties are not configured"));
@@ -149,7 +150,7 @@ describe("Trigger TestIO Test GHA", () => {
         it("should create comment", async () => {
             const gha = setupWithMockedCommentCreation();
             const createCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#987654321`;
-            const createdComment = await gha.addPrepareComment(createCommentUrl);
+            const createdComment = await gha.addPrepareComment(createCommentUrl, defaultCreateCommentBody);
 
             const expectedComment = fs.readFileSync("testResources/expected-default-prepare-comment.md", 'utf8');
             expect(createdComment).toBe(expectedComment);
@@ -185,7 +186,7 @@ describe("Trigger TestIO Test GHA", () => {
             const prepareObject: any = gha.retrieveValidPrepareObjectFromComment(retrievedComment);
             const prTitle = "test: this is my test PR title";
 
-            gha.createAndPersistTestIoPayload(prepareObject, prTitle);
+            await gha.createAndPersistTestIoPayload(prepareObject, prTitle);
 
             const storedPayload = JSON.stringify(JSON.parse(fs.readFileSync(TestIOTriggerTestGHA.persistedPayloadFile, 'utf8')), null, 2);
             const expectedPayload = fs.readFileSync("testResources/expected-default-payload.json", 'utf8');
@@ -196,12 +197,32 @@ describe("Trigger TestIO Test GHA", () => {
 
     describe("[Android context] Comment Creation and Retrieval", () => {
 
-        it("should create comment", async () => {
+        it("should create comment for 'android'", async () => {
             const gha = setupWithMockedCommentCreation();
             const createCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#987654321`;
-            const createdComment = await gha.addPrepareComment(createCommentUrl, "android");
-
+            const createCommentBody = TestIOTriggerTestGHA.CREATE_COMMENT_PREFIX + 'android';
+            const createdComment = await gha.addPrepareComment(createCommentUrl, createCommentBody);
             const expectedComment = fs.readFileSync("testResources/expected-android-prepare-comment.md", 'utf8');
+            expect(createdComment).toBe(expectedComment);
+        });
+
+        it("should create comment for 'android Smartphones'", async () => {
+            const gha = setupWithMockedCommentCreation();
+            const createCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#987654321`;
+
+            const createCommentBody = TestIOTriggerTestGHA.CREATE_COMMENT_PREFIX + 'android    smartphones';
+            const createdComment = await gha.addPrepareComment(createCommentUrl, createCommentBody);
+            const expectedComment = fs.readFileSync("testResources/expected-android-prepare-comment.md", 'utf8');
+            expect(createdComment).toBe(expectedComment);
+        });
+
+        it("should create comment for 'android tablets'", async () => {
+            const gha = setupWithMockedCommentCreation();
+            const createCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#987654321`;
+
+            const createCommentBody = TestIOTriggerTestGHA.CREATE_COMMENT_PREFIX + 'android    tablets';
+            const createdComment = await gha.addPrepareComment(createCommentUrl, createCommentBody);
+            const expectedComment = fs.readFileSync("testResources/expected-android-tablets-prepare-comment.md", 'utf8');
             expect(createdComment).toBe(expectedComment);
         });
 
@@ -227,8 +248,10 @@ describe("Trigger TestIO Test GHA", () => {
             expect(prepareObject.feature.howtofind).toBe("Describe where to find the feature to be tested");
             expect(prepareObject.feature.user_stories[0]).toBe("Add 1 or more user stories here which you want the tester to verify");
             expect(prepareObject.additionalInstructions).toBe("(optional, remove it if not needed)");
-            expect(prepareObject.native.android.min).toBe(8);
-            expect(prepareObject.native.android.max).toBe(10);
+            expect(prepareObject.device.os).toBe("android");
+            expect(prepareObject.device.category).toBe("smartphones");
+            expect(prepareObject.device.min).toBe("8.0");
+            expect(prepareObject.device.max).toBe("10");
         });
 
     });

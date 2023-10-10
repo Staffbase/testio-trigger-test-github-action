@@ -16,6 +16,5 @@
   },
   "additionalInstructions": "(optional, remove it if not needed)"
 }
-
 ```
 As response to [test creation trigger](https://github.com/Me/awesomeRepo/issues/666/comments#987654321).

@@ -75,23 +75,23 @@ To trigger a test on TestIO for your default devices the following steps are req
 5. This triggers the test on TestIO and successful creation is commented back as a new comment.
    <img src="docs/assets/images/test-success.png" alt="success test comment" />
 
-### For Android Devices
+### For Android or iOS Devices
 
-To trigger a test on TestIO explicitly for Android devices the same steps as described for [Default Devices](#for-the-default-devices-in-your-account)
+To trigger a test on TestIO explicitly for Android or iOS devices the same steps as described for [Default Devices](#for-the-default-devices-in-your-account)
 need to be followed but with the following small adjustment:
 
-- The comment to be added to trigger the whole process from step 1 needs to be `@bot-testio exploratory-test create android`.
+- The comment to be added to trigger the whole process from step 1 needs to be `@bot-testio exploratory-test create <OS>` where `<OS>` is one of `android` or `ios`.
+- If you want to trigger a test for Android Tablets you need to write `@bot-testio exploratory-test create android tablets` (for iOS respectively).
 - In addition to the other requested information you now need to provide the following:
   ```json
-  "native": {
-    "android": {
-      "min": 8,
-      "max": 10
-    }
+  "device": {
+    "os": "android",
+    "category": "smartphones",
+    "min": "8.0",
+    "max": "10"
   }
   ```
-- You need to provide minimal and maximum Android version of devices the testers should use.
-- Only `integer` values are allowed.
+- You need to provide minimal and maximum OS version of devices the testers should use.
 - `min` is mandatory and `max` optional.
 - If `max` is not provided TestIO automatically sets it to `latest`.
 
