@@ -181,6 +181,52 @@ describe("TestIO Device API Util", () => {
         expect(devicePayload).toEqual(expectedDevicePayload);
     });
 
+    it('should validate the device spec correctly', async () => {
+        let device: { min: string; os: string; max?: string; category: string } = {
+            os: "wrongOS",
+            category: "smartphone",
+            min: "8.0"
+        };
+        await expect(async () => await TestIOUtil.getDevicePayloadFromPrepareObjectDeviceSpec(device)).rejects.toThrowError("OS name 'wrongOS' is not valid");
+
+        device = {
+            os: "ios",
+            category: "wrongCategory",
+            min: "8.0"
+        };
+        await expect(async () => await TestIOUtil.getDevicePayloadFromPrepareObjectDeviceSpec(device)).rejects.toThrowError("Category 'wrongCategory' is not valid");
+
+        device = {
+            os: "android",
+            category: "smartphone",
+            min: "8.invalid.0"
+        };
+        await expect(async () => await TestIOUtil.getDevicePayloadFromPrepareObjectDeviceSpec(device)).rejects.toThrowError("Min version '8.invalid.0' is not valid");
+
+        device = {
+            os: "android",
+            category: "smartphone",
+            min: "8.0"
+        };
+        await expect(async () => await TestIOUtil.getDevicePayloadFromPrepareObjectDeviceSpec(device)).resolves;
+
+        device = {
+            os: "android",
+            category: "smartphone",
+            min: "8.0",
+            max: "13.0.invalid"
+        };
+        await expect(async () => await TestIOUtil.getDevicePayloadFromPrepareObjectDeviceSpec(device)).rejects.toThrowError("Max version '13.0.invalid' is not valid");
+
+        device = {
+            os: "android",
+            category: "smartphone",
+            min: "8.0",
+            max: "13.0"
+        };
+        await expect(async () => await TestIOUtil.getDevicePayloadFromPrepareObjectDeviceSpec(device)).resolves;
+    });
+
     it('should translate device spec without max version into TestIO device payload', async () => {
         const osName = "ios";
         const categoryName = "smartphone";

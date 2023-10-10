@@ -45,7 +45,7 @@ async function createPayload() {
 
     const prepareObject = gha.retrieveValidPrepareObjectFromComment(commentContents);
     const prTitle: string = await gha.retrievePrTitle();
-    gha.createAndPersistTestIoPayload(prepareObject, prTitle);
+    await gha.createAndPersistTestIoPayload(prepareObject, prTitle);
 }
 
 createPayload().then();
