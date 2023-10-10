@@ -74,9 +74,24 @@ export class TestIOUtil {
 
     static async getDevicePayloadFromPrepareObjectDeviceSpec(device: { category: string; os: string; min: string; max?: string; } ): Promise<any> {
         const categoryId = await TestIOUtil.retrieveDeviceCategoryIdByName(device.category);
+        if (categoryId == -1) {
+            throw new Error(`Category '${device.category}' is not valid`);
+        }
+
         const osId = await TestIOUtil.retrieveOperatingSystemIdByDeviceCategoryIdAndName(categoryId, device.os);
+        if (osId == -1) {
+            throw new Error(`OS name '${device.os}' is not valid`);
+        }
+
         const minVersionId = await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, device.min);
+        if (minVersionId == -1) {
+            throw new Error(`Min version '${device.min}' is not valid`);
+        }
+
         const maxVersionId = (device.max ? await TestIOUtil.retrieveOsVersionIdByOsIdAndVersion(osId, device.max) : null);
+        if (maxVersionId == -1) {
+            throw new Error(`Max version '${device.max}' is not valid`);
+        }
 
         return {
             requirements: [
