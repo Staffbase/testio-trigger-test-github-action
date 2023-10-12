@@ -15,9 +15,6 @@
  */
 
 import * as github from "@actions/github";
-import * as core from "@actions/core";
-import {Util} from "./Util";
-import * as fs from "fs";
 import {TestIOTriggerTestGHA} from "./TestIOTriggerTestGHA";
 
 async function createPayload() {
@@ -34,15 +31,6 @@ async function createPayload() {
         errorFileName
     );
     const commentContents = await gha.retrieveCommentContent(submitCommentID, submitCommentUrl);
-
-    // TODO move this part into gha.retrieveCommentConent
-    const triggerCommentUrl = Util.getUrlFromComment(commentContents);
-    if (triggerCommentUrl != undefined) {
-        core.setOutput("testio-create-comment-url", triggerCommentUrl);
-    } else {
-        core.setOutput("testio-create-comment-url", "");
-    }
-
     const prepareObject = gha.retrieveValidPrepareObjectFromComment(commentContents);
     const prTitle: string = await gha.retrievePrTitle();
     await gha.createAndPersistTestIoPayload(prepareObject, prTitle);
