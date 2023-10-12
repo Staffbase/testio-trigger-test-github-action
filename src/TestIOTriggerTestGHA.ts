@@ -177,6 +177,14 @@ export class TestIOTriggerTestGHA {
 
         const commentContents = `${retrievedComment.data.body}`;
         if (!commentContents) Util.prepareErrorMessageAndOptionallyThrow(`Comment ${submitCommentUrl} seems to be empty`, this.errorFile);
+
+        const triggerCommentUrl = Util.getUrlFromComment(commentContents);
+        if (triggerCommentUrl != undefined) {
+            core.setOutput("testio-create-comment-url", triggerCommentUrl);
+        } else {
+            core.setOutput("testio-create-comment-url", "");
+        }
+
         return commentContents;
     }
 
