@@ -78,7 +78,7 @@ export class Util {
                 console.log("Successfully received response from request");
                 return result;
             }
-            return Promise.reject("Deserializing the data from the response wasn't successful");
+            return Promise.reject(new Error("Deserializing the data from the response wasn't successful"));
         } else {
             const error = new Error((await response.json()).error);
             return Promise.reject(error)
@@ -102,7 +102,7 @@ export class Util {
     }
 
     static getUrlFromComment(comment: string): string | undefined {
-        const urlRegex = /.*```json\s.*\s```\s.*\[.+]\(([^\)]+)\)*/sm;
+        const urlRegex = /.*```json\s.*\s```\s.*\[.+]\(([^)]+)\)*/sm;
         const matches = urlRegex.exec(comment);
         if (!matches) {
             console.log("Couldn't find a URL in the comment");
@@ -119,7 +119,7 @@ export class Util {
         return string.slice(0, maxLength - suffix.length) + suffix;
     }
 
-    public static retrievePrepareObjectFromComment(comment: string): any | undefined {
+    public static retrievePrepareObjectFromComment(comment: string): any {
         const jsonRegex = /.*```json\s(.+)\s```.*/sm;       // everything between ```json and ``` so that we can parse it
         let preparation: any;
         preparation = Util.getJsonObjectFromComment(jsonRegex, comment, 1);
