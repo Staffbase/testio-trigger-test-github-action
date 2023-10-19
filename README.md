@@ -53,10 +53,7 @@ You can also use a reusable workflow to enable this action in your repository de
 ## Use the Action to trigger a new test on TestIO from a PR
 
 We highly recommend creating a separate product in your TestIO account dedicated to test creation from a PR.
-This avoids interference with the tests in your main product(s). 
-You can easily achieve that via the menu as can be seen in the following screenshot.
-
-<img src="docs/assets/images/testio-create-product.png" alt="create new TestIO product" />
+This avoids interference with the tests in your main product(s) (see [FAQs](#faqs)). 
 
 ### For the Default Devices in Your Account
 
@@ -99,9 +96,19 @@ need to be followed but with the following small adjustment:
 
 <details>
 <summary>How/Where to configure the default devices on TestIO?</summary>
-Find the Default Devices in the menu as can be seen in the following screenshot.
+   
+   Find the Default Devices in the menu as can be seen in the following screenshot.
+   
+   <img src="docs/assets/images/testio-manage-default-devices.png" alt="manage default TestIO devices" />
 
-<img src="docs/assets/images/testio-manage-default-devices.png" alt="manage default TestIO devices" />
+</details>
+
+<details>
+<summary>How to create a new product dedicated for testing PRs on TestIO?</summary>
+
+   You can easily achieve that via the menu as can be seen in the following screenshot.
+   
+   <img src="docs/assets/images/testio-create-product.png" alt="create new TestIO product" />
 
 </details>
 
