@@ -92,6 +92,11 @@ need to be followed but with the following small adjustment:
 - `min` is mandatory and `max` optional.
 - If `max` is not provided TestIO automatically sets it to `latest`.
 
+## Run Tests
+- run `nvm use` which uses the node version from `.nvmrc` file
+- run `npm install` to install dependencies
+- run `npm run test` to run the unit test suite
+
 ## FAQs
 
 <details>
