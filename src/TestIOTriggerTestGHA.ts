@@ -24,7 +24,7 @@ import {TestIOUtil} from "./TestIOUtil";
 
 export class TestIOTriggerTestGHA {
 
-    public static readonly CREATE_COMMENT_PREFIX = "@bot-testio exploratory-test create ";
+    public static readonly CREATE_COMMENT_PREFIX = "@bot-testio exploratory-test create";
 
     public static readonly persistedPayloadFile = 'temp/testio_payload.json';
     private static readonly commentPrepareTemplateFile = "exploratory_test_comment_prepare_template.md";
