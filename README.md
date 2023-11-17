@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Trigger Test on TestIO
-        uses: Staffbase/testio-trigger-test-github-action@v1.1.1
+        uses: Staffbase/testio-trigger-test-github-action@v1.1.2
         with:
           testio-slug: your-testio-slug
           testio-product-id: your-testio-product-id
