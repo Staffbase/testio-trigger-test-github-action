@@ -121,6 +121,21 @@ export class TestIOTriggerTestGHA {
             const deviceSpecParts = commentSuffix.split(/\s+/);
             const osName = deviceSpecParts[0];
             const categoryName = (deviceSpecParts[1] ? deviceSpecParts[1] : "smartphones");
+
+            const deviceCategoryId = await TestIOUtil.retrieveDeviceCategoryIdByName(categoryName);
+            if (deviceCategoryId == -1) {
+                const errorMessage = `Device category '${categoryName}' is not valid`;
+                const error = Util.prepareErrorMessageAndOptionallyThrow(errorMessage, this.errorFile, true);
+                return Promise.reject(error);
+            }
+
+            const osId = await TestIOUtil.retrieveOperatingSystemIdByDeviceCategoryIdAndName(deviceCategoryId, osName);
+            if (osId == -1) {
+                const errorMessage = `Operating System '${osName}' is not valid`;
+                const error = Util.prepareErrorMessageAndOptionallyThrow(errorMessage, this.errorFile, true);
+                return Promise.reject(error);
+            }
+
             device = {
                     os: osName,
                     category: categoryName,
