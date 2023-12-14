@@ -145,6 +145,29 @@ describe("Trigger TestIO Test GHA", () => {
         await expect(gha.triggerTestIoTest()).rejects.toEqual(new Error("TestIO properties are not configured"));
     });
 
+    it('should return Error with wrong create comment attributes', async () => {
+        let gha = setupWithMockedCommentCreation();
+        const createCommentUrl = `https://github.com/${owner}/${repo}/issues/${pr}/comments#987654321`;
+
+        // os: wrong, device category: correct
+        let createComment = "@bot-testio exploratory-test create androiddd"; // without category it defaults to 'smartphones'
+        await expect(gha.addPrepareComment(createCommentUrl, createComment)).rejects.toEqual(new Error("Operating System 'androiddd' is not valid"));
+        createComment = "@bot-testio exploratory-test create iossss tablets";
+        await expect(gha.addPrepareComment(createCommentUrl, createComment)).rejects.toEqual(new Error("Operating System 'iossss' is not valid"));
+
+        // os: wrong, device category: wrong
+        createComment = "@bot-testio exploratory-test create androiddd tabletssss";
+        await expect(gha.addPrepareComment(createCommentUrl, createComment)).rejects.toEqual(new Error("Device category 'tabletssss' is not valid"));
+
+        // os: correct, device category: wrong
+        createComment = "@bot-testio exploratory-test create android tabletsXYZ";
+        await expect(gha.addPrepareComment(createCommentUrl, createComment)).rejects.toEqual(new Error("Device category 'tabletsXYZ' is not valid"));
+
+        // os: correct, device category: correct
+        createComment = "@bot-testio exploratory-test create ios smartphones";
+        await expect(gha.addPrepareComment(createCommentUrl, createComment)).resolves.toBeDefined();
+    });
+
     describe("[default context] Comment Creation and Retrieval", () => {
 
         it("should create comment", async () => {
